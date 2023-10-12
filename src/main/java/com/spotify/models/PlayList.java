@@ -1,0 +1,44 @@
+package com.spotify.models;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+public class PlayList {
+    private UUID playlistID;
+    private String playlistName;
+    private List<UUID> SongIDs =new ArrayList<>();
+
+    public PlayList() {
+    }
+
+    public PlayList(String playlistName) {
+        this.playlistID = UUID.randomUUID();
+        this.playlistName = playlistName;
+    }
+
+    public UUID getPlaylistID() {
+        return playlistID;
+    }
+
+    public void setPlaylistID(UUID playlistID) {
+        this.playlistID = playlistID;
+    }
+
+    public String getPlaylistName() {
+        return playlistName;
+    }
+
+    public void setPlaylistName(String playlistName) {
+        this.playlistName = playlistName;
+    }
+
+    public List<UUID> getSongIDs() {
+        return SongIDs;
+    }
+
+    public void setSongIDs(List<UUID> songIDs) {
+        SongIDs = songIDs;
+    }
+
+}
