@@ -1,15 +1,12 @@
 package com.spotify.services;
 
 import com.spotify.exceptions.NotFoundException;
-import com.spotify.exceptions.UserNameAlreadyTakenException;
-import com.spotify.models.Customer;
 import com.spotify.models.Song;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
 import static java.lang.Integer.parseInt;
 
@@ -38,7 +35,18 @@ public class SongService implements Serializable {
         if (!validSongLength(songLength)) {
             throw new IllegalArgumentException("Song length can't be 0" );
         }
-
+        if (songName==null|| songName.isEmpty()){
+            throw new IllegalArgumentException("Song can't be null");
+        }
+        if (artistName==null|| artistName.isEmpty()){
+            throw new IllegalArgumentException("artist can't be null");
+        }
+        if (genre == null || genre.isEmpty()){
+            throw new IllegalArgumentException("genre can't be null");
+        }
+        if (album==null || album.isEmpty()){
+            throw new IllegalArgumentException("album can't be null");
+        }
         Song song = new Song (songName,artistName,genre,songLength,album);
         //put method returns null if the key is not present in the map
         return addSongToDatabase(song);
@@ -86,21 +94,16 @@ public class SongService implements Serializable {
             default -> throw new IllegalArgumentException("Invalid search criteria");
         };
     }
-    public void deleteSongUsingID (UUID IDToDelete){
-        boolean checkDelete=false;
-        for  (Song song:songList){
-            if (IDToDelete==song.getSongIdentifier()){
-                songList.remove(song);
-                checkDelete=true;
-            }
+    public void deleteSongByID(UUID ownerId) throws NullPointerException, NotFoundException {
+
+        if (!songByID.containsKey(ownerId)) {
+            throw new NotFoundException(String.format("Owner with id %s not found", ownerId));
         }
-        if (checkDelete){
-            System.out.println("Song deleted successfully");
-        }
-        else{
-            System.out.println("Song not found");
-        }
+
+        Song song = songByID.get(ownerId);
+        songByID.remove(ownerId);
     }
+
     public List<String> listArtistByMusicGenre (String genreToSearch){
         return songByID.values().stream()
                 .filter(song -> song.getGenre().equalsIgnoreCase(genreToSearch))
