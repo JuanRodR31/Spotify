@@ -117,11 +117,4 @@ public class FileService {
 
     }
 
-    public void writeTextFile(String path,
-                              List<String> linesToWrite)
-            throws IOException {
-        File file = new File(path);
-
-        Files.write(file.toPath(), linesToWrite, StandardCharsets.UTF_8);
-    }
 }

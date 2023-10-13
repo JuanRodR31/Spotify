@@ -1,9 +1,9 @@
 package com.spotify.models;
 
+import com.spotify.Main;
+
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class Customer implements Serializable {
     private UUID userIdentifier;
@@ -13,11 +13,12 @@ public class Customer implements Serializable {
     private String clientLastname;
     private int clientAge;
     private List<UUID> followedArtist=new ArrayList<>();
-    private List<PlayList> clientPlayLists=new ArrayList<>();
-
+    Map <UUID, PlayList> clientPlayListsbyID;
     //Constructors
-    public Customer() {
+    public Customer(){
+        this.clientPlayListsbyID= new HashMap<>();
     }
+
     public Customer(String user, String password, String clientName, String clientLastname, int clientAge) {
         this.userIdentifier = UUID.randomUUID();
         this.username = user;
@@ -93,21 +94,7 @@ public class Customer implements Serializable {
         this.followedArtist = followedArtist;
     }
 
-    public void setClientPlayLists(List<PlayList> clientPlayLists) {
-        this.clientPlayLists = clientPlayLists;
-    }
 
-    public List<PlayList> getClientPlayLists() {
-        return clientPlayLists;
-    }
-
-    public void setClientPlayLists() {
-        this.clientPlayLists = clientPlayLists;
-    }
-    public void addPlayList (String playListName){
-        PlayList playList= new PlayList(playListName);
-        getClientPlayLists().add(playList);
-    }
     //TOSTRING
     @Override
     public String toString() {

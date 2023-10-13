@@ -13,7 +13,8 @@ import java.util.*;
 public class CustomerService implements Serializable {
 
     private List<Customer> customerList=new ArrayList<>();
-    private String userPattern = "^[a-zA-Z0-9-_-]{8,30}$";
+    private final String userPattern = "^[a-zA-Z0-9-_-]{8,30}$";
+
     Map<UUID, Customer> customerByID;
     Map<String, Customer> customerByUsername;
 
@@ -33,9 +34,14 @@ public class CustomerService implements Serializable {
         if (usernameIsTaken(username)) {
             throw new UserNameAlreadyTakenException(String.format("Username %s is already taken", username));
         }
+        if (!ageOver18(clientAge)){
+            throw new IllegalArgumentException(String.format("Client is not an adult"));
+        }
         Customer customer=new Customer(username,userPassword,clientName,clientLastname,clientAge);
         return addCustomerToDatabase(customer);
     }
+
+
     private boolean addCustomerToDatabase (Customer customer) throws IllegalArgumentException{
         if (customer == null) {
             throw new IllegalArgumentException("Customer cannot be null");
@@ -45,62 +51,37 @@ public class CustomerService implements Serializable {
         }
         return customerByID.put(customer.getUserIdentifier(),customer)== null && customerByUsername.put(customer.getUsername(), customer)==null;
     }
-    /*public void createUser (String userName,
-                            String userPassword,
-                            String clientName,
-                            String clientLastname,
-                            int clientAge) throws UserNameAlreadyTakenException, IllegalArgumentException{
-        boolean validateUser=validUsername(userName);
-        if (!validateUser){
-            System.out.println("invalid username");
-        }
 
-        else {
-            Customer customer= new Customer(userName,userPassword,clientName,clientLastname,clientAge);
-            customerList.add(customer);
-            System.out.println("customer added successfully");
-        }
 
-    }*/
     private boolean usernameIsTaken(String username) {
         return customerByID.values().stream()
-                .noneMatch(customer -> customer.getUsername().equals(username));
+                .anyMatch(customer -> customer.getUsername().equals(username));
     }
-    //delete functions
-    public boolean deleteCustomerByID(UUID ownerId) throws NullPointerException, NotFoundException {
 
-        if (!customerByID.containsKey(ownerId)) {
-            throw new NotFoundException(String.format("Owner with id %s not found", ownerId));
+
+    //delete functions
+    public boolean deleteCustomerByID(UUID customerID) throws NullPointerException, NotFoundException {
+
+        if (!customerByID.containsKey(customerID)) {
+            throw new NotFoundException(String.format("Customer with id %s not found", customerID));
         }
 
-        Customer owner = customerByID.get(ownerId);
-        return customerByID.remove(ownerId) != null && customerByUsername.remove(owner.getUsername()) != null;
+        Customer customer = customerByID.get(customerID);
+        return customerByID.remove(customerID) != null && customerByUsername.remove(customer.getUsername()) != null;
     }
+
+
     public boolean deleteCustomerByUsername(String username) throws NullPointerException, NotFoundException {
 
         if (!customerByUsername.containsKey(username)) {
-            throw new NotFoundException(String.format("Owner with given username not found", username));
+            throw new NotFoundException(String.format("Customer with given username not found", username));
         }
 
-        Customer owner = customerByUsername.get(username);
-        return customerByUsername.remove(username) != null && customerByID.remove(owner.getUserIdentifier()) != null;
+        Customer customer = customerByUsername.get(username);
+        return customerByUsername.remove(username) != null && customerByID.remove(customer.getUserIdentifier()) != null;
     }
 
-    /*public void deleteUserUsingUsername (String username){
-        boolean checkUserDelete=false;
-        for (Customer customer: customerList){
-            if (customer.getUsername().equals(username)){
-                customerList.remove(customer);
-                checkUserDelete=true;
-            }
-        }
-        if (checkUserDelete){
-            System.out.println("user deleted successfully");
-        }
-        else{
-            System.out.println("user not found");
-        }
-    }*/
+
     private boolean validUsername (String userName){
         if (!userName.matches(userPattern)){
             return false;
@@ -112,7 +93,10 @@ public class CustomerService implements Serializable {
         }
         return true;
     }
-
+    private boolean ageOver18 (int customerAge){
+        int minimalAge = 18;
+        return customerAge >= minimalAge;
+    }
     public void setCustomerList(List<Customer> customerList) {
         this.customerList = customerList;
     }
@@ -123,7 +107,7 @@ public class CustomerService implements Serializable {
     private boolean addCustomerToDatabase(List<Customer> customers) {
 
         return customers.stream().allMatch(
-                owner -> addCustomerToDatabase(owner)
+                customer-> addCustomerToDatabase(customer)
         );
     }
     public boolean loadCustomersFromCSVFile(String path,
@@ -131,19 +115,12 @@ public class CustomerService implements Serializable {
                                          FileService fileService)
             throws IOException, NotFoundException {
 
-        List<Customer> owners = fileService.loadCustomersFromCSVFile(path, delimiter);
+        List<Customer> customers = fileService.loadCustomersFromCSVFile(path, delimiter);
 
-        return addCustomerToDatabase(owners);
+        return addCustomerToDatabase(customers);
     }
 
-    /*public void saveCustomersToCSVFile(String filePath, FileService fileService) throws IOException {
-        List<String> ownersListToCSV = this.customerByID.values().stream()
-                .map(customer -> customer.toCSV(";"))
-                .toList();
 
-        fileService.writeTextFile(filePath, ownersListToCSV);
-
-    }*/
 
     public void loadCustomersFromBinaryFileUsingTheEntireList(String filePath,
                                                               FileService fileService) throws IOException, ClassNotFoundException{
@@ -170,10 +147,12 @@ public class CustomerService implements Serializable {
             System.out.println(customers.getValue());
         }
     }
-    public void createNewPlayList(String costumerUsername, String playlistName) {
+
+
+    /*public void createNewPlayList(String costumerUsername, String playlistName) {
         for (Customer customer: customerList) {
             if (customer.getUsername().equals(costumerUsername)){
-                customer.addPlayList(playlistName);
+                customer.set(playlistName);
             }
         }
     }
@@ -188,7 +167,7 @@ public class CustomerService implements Serializable {
                 }
             }
         }
-    }
+    }*/
     public UUID searchUUIDBasedOnSongName (String songName){
         return null;
     }

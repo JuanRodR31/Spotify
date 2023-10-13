@@ -1,5 +1,6 @@
 package com.spotify;
 
+import com.spotify.exceptions.IllegalArgumentException;
 import com.spotify.exceptions.NotFoundException;
 import com.spotify.exceptions.UserNameAlreadyTakenException;
 import com.spotify.models.Customer;
@@ -9,10 +10,7 @@ import com.spotify.services.FileService;
 import com.spotify.services.SongService;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
-import java.util.UUID;
+import java.util.*;
 
 import static java.lang.Integer.parseInt;
 public class Main {
@@ -22,10 +20,10 @@ public class Main {
     private static FileService fileServiceCall =new FileService();
     public static void main(String[] args) throws IOException, ClassNotFoundException, UserNameAlreadyTakenException {
         String option;
-        final String customerCSVFilePath ="C:\\Users\\juanl\\OneDrive\\Escritorio\\Trabajos PUJ\\TalleresJavaProgra\\Taller9\\Spotify\\src\\main\\resources\\customers.csv";
-        final String songCSVFilePath = "C:\\Users\\juanl\\OneDrive\\Escritorio\\Trabajos PUJ\\TalleresJavaProgra\\Taller9\\Spotify\\src\\main\\resources\\songs.csv";
-        final String customerBinFileName= "C:\\Users\\juanl\\OneDrive\\Escritorio\\Trabajos PUJ\\TalleresJavaProgra\\Taller9\\Spotify\\src\\main\\resources\\customers.bin";
-        final String songBinFileName= "C:\\Users\\juanl\\OneDrive\\Escritorio\\Trabajos PUJ\\TalleresJavaProgra\\Taller9\\Spotify\\src\\main\\resources\\songs.bin";
+        final String customerCSVFilePath ="src/main/resources/customers.csv";
+        final String songCSVFilePath = "src/main/resources/songs.csv";
+        final String customerBinFileName= "src/main/resources/customers.bin";
+        final String songBinFileName= "src/main/resources/songs.bin";
         final String delimiter=";";
         FileService fileService = new FileService();
 
@@ -63,21 +61,28 @@ public class Main {
                     takeSongData();
                     break;
                 }
+                //3: list songs that contain keyword
                 case "3": {
                     System.out.println("Enter search parameter: ");
                     System.out.println("Option 1: Song name");
                     System.out.println("Option 2: Artist name");
                     System.out.println("Option 3: Genre");
                     System.out.println("Option 4: Album");
-                    String parameter=input.nextLine();
-                    System.out.println("Enter keyword: ");
+                    Set<Integer> parameter= Collections.singleton(Integer.valueOf(input.nextLine()));
+                    System.out.println("Enter search value: ");
                     String keyWord=input.nextLine();
-                    songServiceCall.listSongsThatContainKW(keyWord, parameter);
+                    List<String> filterResult=songServiceCall.getSongsFilteredBy(parameter,keyWord);
+                    for (String result: filterResult){
+                        System.out.println(result);
+                    }
                     break;
                 }
                 case "4": {
                     String genre= takeGenre();
-                    songServiceCall.listArtisteByMusicGenre(genre);
+                    List<String> artistsByGenre= songServiceCall.listArtistByMusicGenre(genre);
+                    for (String artist: artistsByGenre){
+                        System.out.println(artist);
+                    }
                     break;
                 }
                 case "5": {
@@ -100,12 +105,11 @@ public class Main {
                     try {
                         customerServiceCall.loadCustomersFromCSVFile(customerCSVFilePath,delimiter,fileService);
                     } catch (NotFoundException e) {
-                        throw new RuntimeException(e);
+                        System.out.println("file not found");
                     }
-                    break;
                 }
                 case "8":{
-
+                        songServiceCall.loadSongsFromCSVFile(songCSVFilePath,delimiter,fileService);
                     break;
                 }
                 case "9":{
@@ -113,7 +117,7 @@ public class Main {
                     break;
                 }
                 case "10":{
-                    songServiceCall.printSongList();
+                    songServiceCall.printSongMap();
                     break;
                 }
                 //11. Create new playlist
@@ -122,7 +126,7 @@ public class Main {
                     String customerUserName=input.nextLine();
                     System.out.println("Enter playlist name: ");
                     String playListName=input.nextLine();
-                    customerServiceCall.createNewPlayList(customerUserName, playListName);
+                    //customerServiceCall.createNewPlayList(customerUserName, playListName);
                     break;
                 }
                 //12: Add songs to existing playlist
@@ -135,7 +139,7 @@ public class Main {
                     UUID songID= UUID.fromString(input.nextLine());
                     /*System.out.println("Enter song name to search: ");
                     String songNameToSearch= input.nextLine();*/
-                    customerServiceCall.addSongsToCustomerPlayList(customerUserName,playlistID, songID);
+                    //customerServiceCall.addSongsToCustomerPlayList(customerUserName,playlistID, songID);
                     break;
                 }
                 //13: Follow an artist using user
@@ -159,12 +163,12 @@ public class Main {
                 }
                 //16: Save song data in bin file
                 case "16":{
-                    fileServiceCall.saveSongsIntoBinFile(songBinFileName, songServiceCall.getSongList());
+                    songServiceCall.saveSongsToBinaryFileUsingTheEntireList(songBinFileName,fileService);
                     break;
                 }
                 //17: Load song data from bin file
                 case "17":{
-                    songServiceCall.setSongList(fileServiceCall.loadSongFromBinFile(songBinFileName));
+                    songServiceCall.loadSongsFromBinaryFileUsingTheEntireList(songBinFileName,fileService);
                     break;
                 }
                 //18: Show Report
@@ -199,9 +203,6 @@ public class Main {
         }catch (UserNameAlreadyTakenException e){
         System.out.println("User Already taken");
         }
-        catch(IllegalArgumentException e){
-        System.out.println("invalid username");
-        }
 
     }
     private static void takeSongData (){
@@ -215,7 +216,7 @@ public class Main {
         int songLength=parseInt(input.nextLine());
         System.out.println("Enter Album: ");
         String songAlbum=input.nextLine();
-        songServiceCall.createSong(songName,artistName,genre,songLength,songAlbum);
+        songServiceCall.addSongToDatabase(songName,artistName,genre,songLength,songAlbum);
 
 
     }
@@ -224,6 +225,5 @@ public class Main {
         String genre=input.nextLine();
         return genre;
     }
-
 }
 
