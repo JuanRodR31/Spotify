@@ -112,6 +112,12 @@ public class SongService implements Serializable {
                 .toList();
 
     }
+    public List<String> listAllArtists (){
+        return songByID.values().stream()
+                .map(Song::getArtistName)
+                .distinct()
+                .toList();
+    }
 
     public void printSongList() {
         for (Song song: songList){

@@ -2,8 +2,8 @@ package com.spotify.services;
 
 import com.spotify.exceptions.NotFoundException;
 import com.spotify.exceptions.UserNameAlreadyTakenException;
+import com.spotify.models.Artist;
 import com.spotify.models.Customer;
-import com.spotify.models.PlayList;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -171,11 +171,20 @@ public class CustomerService implements Serializable {
     public UUID searchUUIDBasedOnSongName (String songName){
         return null;
     }
-    public void followArtist(String customerUsername,UUID artistID ) {
-        for (Customer customer: customerList){
-            if (customer.getUsername().equals(customerUsername)){
-                customer.getFollowedArtist().add(artistID);
+    public List<Customer> ArtisttoList(String customerUsername, UUID artistID ) {
+        return customerByID.values().stream()
+                .toList();
+    }
+    public void addFollowedArtistToCustomer (String customerUsername, UUID artistID){
+        for (Customer customerToSearch : customerByID.values()){
+            if (customerToSearch.getUsername().equals(customerUsername)){
+                customerToSearch.addFollowedartist(artistID);
             }
         }
     }
+    public void artistExists (UUID artistID){
+        SongService songService= new SongService();
+        List<String> artistList=songService.listAllArtists();
+    }
+
 }

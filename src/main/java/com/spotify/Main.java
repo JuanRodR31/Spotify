@@ -54,8 +54,6 @@ public class Main {
                 switch (option) {
 
                     case "1": {
-                        System.out.println("Option 0: Exit");
-                        System.out.println("Select your option: ");
                         takeUserData();
                         break;
                     }
@@ -156,7 +154,7 @@ public class Main {
                         String customerUserName = input.nextLine();
                         System.out.println("Enter playlist ID: ");
                         UUID artistID = UUID.fromString(input.nextLine());
-                        customerServiceCall.followArtist(customerUserName, artistID);
+                        customerServiceCall.addFollowedArtistToCustomer(customerUserName, artistID);
                         break;
                     }
                     //14: Save customer data in bin file
@@ -212,6 +210,7 @@ public class Main {
         int clientAge=parseInt(input.nextLine());
         try {
             customerServiceCall.addCustomerToDatabase(userName,userPassword,clientName,clientLastname,clientAge);
+            System.out.println("Customer created successfully");
         }catch (UserNameAlreadyTakenException e){
         System.out.println("User Already taken");
         }
@@ -238,6 +237,7 @@ public class Main {
         String songAlbum=input.nextLine();
         try {
             songServiceCall.addSongToDatabase(songName, artistName, genre, songLength, songAlbum);
+            System.out.println("Song created successfully");
         }catch (IllegalArgumentException e){
 
             if(songName == null || songName.isEmpty()){

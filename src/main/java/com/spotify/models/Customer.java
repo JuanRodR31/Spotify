@@ -94,7 +94,6 @@ public class Customer implements Serializable {
         this.followedArtist = followedArtist;
     }
 
-
     //TOSTRING
     @Override
     public String toString() {
@@ -108,4 +107,7 @@ public class Customer implements Serializable {
                 '}';
     }
 
+    public void addFollowedartist(UUID artistID) {
+        followedArtist.add(artistID);
+    }
 }
