@@ -26,6 +26,7 @@ public class Customer implements Serializable {
         this.clientName = clientName;
         this.clientLastname = clientLastname;
         this.clientAge = clientAge;
+        this.clientPlayListsbyID=new HashMap<>();
     }
 
     public Customer(UUID userIdentifier, String user, String password, String clientName, String clientLastname, int clientAge) {
@@ -35,6 +36,7 @@ public class Customer implements Serializable {
         this.clientName = clientName;
         this.clientLastname = clientLastname;
         this.clientAge = clientAge;
+        this.clientPlayListsbyID=new HashMap<>();
     }
 
     //Getters and Setters
@@ -92,6 +94,18 @@ public class Customer implements Serializable {
 
     public void setFollowedArtist(List<UUID> followedArtist) {
         this.followedArtist = followedArtist;
+    }
+    public void addPlaylist (String playlistName){
+        PlayList playList= new PlayList(playlistName);
+        clientPlayListsbyID.values().add(playList);
+    }
+
+    public Map<UUID, PlayList> getClientPlayListsbyID() {
+        return clientPlayListsbyID;
+    }
+
+    public void setClientPlayListsbyID(Map<UUID, PlayList> clientPlayListsbyID) {
+        this.clientPlayListsbyID = clientPlayListsbyID;
     }
 
     //TOSTRING

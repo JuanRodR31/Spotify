@@ -17,6 +17,9 @@ public class Main {
     private static CustomerService customerServiceCall= new CustomerService();
     private static SongService songServiceCall = new SongService();
     private static FileService fileServiceCall =new FileService();
+    private static final String userPattern = "^[a-zA-Z0-9-_-]{8,30}$";
+    private static final String passwordPattern = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*.-]).{8,}$";
+
     public static void main(String[] args) throws IOException, ClassNotFoundException, UserNameAlreadyTakenException {
         String option;
         final String customerCSVFilePath ="src/main/resources/customers.csv";
@@ -132,7 +135,7 @@ public class Main {
                         String customerUserName = input.nextLine();
                         System.out.println("Enter playlist name: ");
                         String playListName = input.nextLine();
-                        //customerServiceCall.createNewPlayList(customerUserName, playListName);
+                        customerServiceCall.createNewPlayList(customerUserName, playListName);
                         break;
                     }
                     //12: Add songs to existing playlist
@@ -182,6 +185,12 @@ public class Main {
 
                         break;
                     }
+                    //19: print playlists
+                    case "19":{
+                        System.out.println("Enter username to search playlists: ");
+                        String customerUserName = input.nextLine();
+                        customerServiceCall.printUserPlayLists(customerUserName);
+                    }
                     case "0": {
                         System.out.println("Bye!");
                         break;
@@ -218,8 +227,17 @@ public class Main {
             if (clientAge<18){
                 System.out.println("User is not an adult");
             }
-            else{
+            if (!userName.matches(userPattern)){
                 System.out.println("Customer username must contain 8 to 30 characters and cannot use special characters despite of _");
+            }
+            if (!userPassword.matches(passwordPattern)){
+                System.out.println("Customer password must contain 8 characters, one upper case letter, one number and one special character.");
+            }
+            if (clientName == null || clientName.isEmpty()){
+                System.out.println("Customer name can't be empty");
+            }
+            if (clientLastname==null || clientLastname.isEmpty()){
+                System.out.println("Customer lastname can't be empty");
             }
         }
 
@@ -241,19 +259,19 @@ public class Main {
         }catch (IllegalArgumentException e){
 
             if(songName == null || songName.isEmpty()){
-                System.out.println("Song name can't be null");
+                System.out.println("Song name can't be empty");
             }
             if (artistName==null || artistName.isEmpty()){
-                System.out.println("Artist name can't be null");
+                System.out.println("Artist name can't be empty");
             }
             if (genre == null || genre.isEmpty()){
-                System.out.println("genre can't be null");
+                System.out.println("genre can't be empty");
             }
             if (songLength<0) {
                 System.out.println("Song length can't be 0" );
             }
             if (songAlbum==null || songAlbum.isEmpty()){
-                System.out.println("Album can't be null");
+                System.out.println("Album can't be empty");
             }
         }
 
