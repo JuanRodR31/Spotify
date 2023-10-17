@@ -1,6 +1,7 @@
 package com.spotify.models;
+import java.io.Serializable;
 import java.util.UUID;
-public class Artist {
+public class Artist implements Serializable {
     private UUID artistID;
     private String artistName;
 

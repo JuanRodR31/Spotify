@@ -14,7 +14,7 @@ public class Customer implements Serializable {
     private String clientLastname;
     private int clientAge;
     private List<UUID> followedArtist=new ArrayList<>();
-    Map <UUID, PlayList> clientPlayListsbyID;
+    private Map <UUID, PlayList> clientPlayListsbyID;
     FileService fileServiceCall=new FileService();
     //Constructors
     public Customer(){
@@ -110,6 +110,19 @@ public class Customer implements Serializable {
         this.clientPlayListsbyID = clientPlayListsbyID;
     }
 
+    @Override
+    public String toString() {
+        return "Customer{" +
+                "userIdentifier=" + userIdentifier +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                ", clientName='" + clientName + '\'' +
+                ", clientLastname='" + clientLastname + '\'' +
+                ", clientAge=" + clientAge +
+                ", followedArtist=" + followedArtist +
+                ", clientPlayListsbyID=" + clientPlayListsbyID +
+                '}';
+    }
 
     public void addFollowedartist(UUID artistID) {
         followedArtist.add(artistID);

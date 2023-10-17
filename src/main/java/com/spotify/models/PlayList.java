@@ -1,10 +1,11 @@
 package com.spotify.models;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class PlayList {
+public class PlayList implements Serializable {
     private UUID playlistID;
     private String playlistName;
     private List<UUID> SongIDs =new ArrayList<>();

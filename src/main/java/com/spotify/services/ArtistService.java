@@ -4,11 +4,12 @@ import com.spotify.exceptions.NotFoundException;
 import com.spotify.models.Artist;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class ArtistService {
+public class ArtistService implements Serializable {
     private List<Artist> artistList=new ArrayList<>();
     public void createArtist(String artistName){
         Artist artist=new Artist(artistName);

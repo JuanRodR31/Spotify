@@ -145,7 +145,7 @@ public class CustomerService implements Serializable {
 
     public void printCustomerMap (){
         for (Map.Entry customers: customerByID.entrySet()){
-            System.out.println(customers.getValue());
+            System.out.println(customers.getValue().toString());
         }
     }
 

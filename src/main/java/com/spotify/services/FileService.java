@@ -17,7 +17,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class FileService {
+public class FileService implements Serializable{
     public static final String COMMA_DELIMITER = ",";
     public static final String OPEN_CURLY_BRACE = "{";
     public static final String CLOSE_CURLY_BRACE = "}";
@@ -89,6 +89,10 @@ public class FileService {
             try (FileOutputStream fos = new FileOutputStream(file);
                  ObjectOutputStream oos = new ObjectOutputStream(fos)){
                 oos.writeObject(customers);
+                fos.close();
+            }catch (NotSerializableException exception) {
+                // Output expected NotSerializeableExceptions.
+                System.out.println(exception);
             }
     }
 
