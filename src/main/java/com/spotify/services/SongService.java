@@ -83,7 +83,7 @@ public class SongService implements Serializable {
     private Predicate<Song> getSongFilter(Set<Integer> searchCriterias, String searchedValue) {
 
         return song -> searchCriterias.stream()
-                .anyMatch(searchCriteria -> getSearchValue(song, searchCriteria).contains(searchedValue));
+                .anyMatch(searchCriteria -> getSearchValue(song, searchCriteria).equalsIgnoreCase(searchedValue));
     }
     private String getSearchValue(Song song, Integer searchCriteria) {
         return switch (searchCriteria) {
@@ -94,14 +94,14 @@ public class SongService implements Serializable {
             default -> throw new IllegalArgumentException("Invalid search criteria");
         };
     }
-    public void deleteSongByID(UUID ownerId) throws NullPointerException, NotFoundException {
+    public void deleteSongByID(UUID songId) throws NullPointerException, NotFoundException {
 
-        if (!songByID.containsKey(ownerId)) {
-            throw new NotFoundException(String.format("Owner with id %s not found", ownerId));
+        if (!songByID.containsKey(songId)) {
+            throw new NotFoundException(String.format("Song with id %s not found", songId));
         }
 
-        Song song = songByID.get(ownerId);
-        songByID.remove(ownerId);
+        Song song = songByID.get(songId);
+        songByID.remove(songId);
     }
 
     public List<String> listArtistByMusicGenre (String genreToSearch){
@@ -132,7 +132,7 @@ public class SongService implements Serializable {
     public boolean loadSongsFromCSVFile(String path,
                                             String delimiter,
                                             FileService fileService)
-            throws IOException{
+            throws IOException, NotFoundException{
 
         List<Song> songs = fileService.loadSongFromCSVFile(path, delimiter);
 

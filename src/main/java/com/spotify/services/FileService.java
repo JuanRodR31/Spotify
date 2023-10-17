@@ -1,19 +1,27 @@
 package com.spotify.services;
 
+import com.spotify.models.Artist;
 import com.spotify.models.Customer;
+import com.spotify.models.PlayList;
 import com.spotify.models.Song;
 import com.spotify.services.enums.CustomerAttributesEnum;
+import com.spotify.services.enums.PlaylistAttributesEnum;
 import com.spotify.services.enums.SongAttributesEnum;
+import com.spotify.services.enums.ArtistAttributesEnum;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class FileService {
+    public static final String COMMA_DELIMITER = ",";
+    public static final String OPEN_CURLY_BRACE = "{";
+    public static final String CLOSE_CURLY_BRACE = "}";
+    public static final String EMPTY_STRING = "";
     public List<Customer> loadCustomersFromCSVFile(String path, String delimiter) throws IOException {
         File file = new File(path);
 
@@ -117,4 +125,105 @@ public class FileService {
 
     }
 
+    public List<Artist> readArtistsFromCSV(String path, String delimiter) throws IOException {
+        File file = new File(path);
+
+        List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+
+        List<Artist> artists = new ArrayList<>();
+
+        for (String line : lines) {
+            String[] values = line.split(delimiter);
+            Artist artist = getArtistFromCSVLine(values);
+            artists.add(artist);
+        }
+        return artists;
+    }
+
+    public List<Artist> readArtistsFromCSVUsingStreams(String path, String delimiter)
+            throws IOException {
+        return Files.lines(new File(path).toPath())
+                .map(line -> line.split(delimiter))
+                .map(this::getArtistFromCSVLine)
+                .collect(Collectors.toList());
+    }
+    private Artist getArtistFromCSVLine(String[] values) {
+
+        String id = values[ArtistAttributesEnum.ARTISTID.getIndex()];
+        String name = values[ArtistAttributesEnum.ARTISTNAME.getIndex()];
+
+        Artist artist = new Artist(UUID.fromString(id), name);
+
+        return artist;
+
+
+    }
+
+
+
+    private String extractElementsBetweenCurlyBraces(String setString){
+
+        return setString
+                // Remove the curly braces from the string
+                .replace(OPEN_CURLY_BRACE, EMPTY_STRING)
+                .replace(CLOSE_CURLY_BRACE, EMPTY_STRING);
+    }
+    private String[] splitAndDeleteSpaces(String stringToSplit, String delimiter){
+
+        return  Stream.of(stringToSplit.split(delimiter))
+                .map(String::trim)
+                .toArray(String[]::new);
+    }
+
+    public Map<UUID, PlayList> readPlayListFromCSV(String path, String delimiter) throws IOException {
+
+        File file = new File(path);
+        List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+        Map<UUID,PlayList> playListByCustomer = new HashMap<>();
+
+        for(String line : lines){
+            String[] values = line.split(delimiter);
+            Map.Entry<UUID,PlayList> playlistEntry = getPlayListFromCSVLine(values);
+            playListByCustomer.put(playlistEntry.getKey(),playlistEntry.getValue());
+        }
+
+        return playListByCustomer;
+
+
+
+    }
+
+    public Map<UUID, PlayList> readPlayListFromCSVUsingStreams(String path, String delimiter)
+            throws IOException {
+
+        return Files.lines(new File(path).toPath())
+                .map(line -> line.split(delimiter))
+                .map(this::getPlayListFromCSVLine)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    private Map.Entry<UUID,PlayList> getPlayListFromCSVLine(String[] values) {
+
+        String id = values[PlaylistAttributesEnum.PLAYLISTID.getIndex()];
+        String name = values[PlaylistAttributesEnum.PLAYLISTNAME.getIndex()];
+        String songIds = values[PlaylistAttributesEnum.PLAYLISTSONGS.getIndex()];
+
+        String[] songIdsArray = getArrayFromStringSet(songIds);
+
+        List<UUID> songIdsList = Stream.of(songIdsArray)
+                .map(UUID::fromString)
+                .collect(Collectors.toList());
+
+        PlayList playlist = new PlayList(UUID.fromString(id),name, songIdsList);
+
+        return Map.entry(UUID.fromString(id),playlist);
+
+    }
+
+    private String[] getArrayFromStringSet(String valueFromCSV) {
+
+        String valueWithoutCurlyBraces = extractElementsBetweenCurlyBraces(valueFromCSV);
+        return splitAndDeleteSpaces(valueWithoutCurlyBraces, COMMA_DELIMITER);
+
+    }
 }

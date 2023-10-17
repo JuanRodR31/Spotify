@@ -15,10 +15,11 @@ import java.util.*;
 public class CustomerService implements Serializable {
 
     private final String userPattern = "^[a-zA-Z0-9-_-]{8,30}$";
-    private final String passwordPattern = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*.-]).{8,}$";
+    private final String passwordPattern = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*._-]).{8,}$";
 
     Map<UUID, Customer> customerByID;
     Map<String, Customer> customerByUsername;
+    ArtistService artistServiceCall =new ArtistService();
 
     public CustomerService() {
         this.customerByID = new HashMap<>();
@@ -174,15 +175,18 @@ public class CustomerService implements Serializable {
                 .toList();
     }
     public void addFollowedArtistToCustomer (String customerUsername, UUID artistID){
-        for (Customer customerToSearch : customerByID.values()){
-            if (customerToSearch.getUsername().equals(customerUsername)){
-                customerToSearch.addFollowedartist(artistID);
+        boolean artistExists=artistServiceCall.verifyIfArtistExists(artistID);
+        if (artistExists){
+            for (Customer customer: customerByID.values()){
+                customer.addFollowedartist(artistID);
             }
+        }
+        else{
+            System.out.println ("Artist does not exist");
         }
     }
     public void artistExists (UUID artistID){
         SongService songService= new SongService();
         List<String> artistList=songService.listAllArtists();
     }
-
 }

@@ -12,6 +12,11 @@ public class Artist {
         this.artistName = artistName;
     }
 
+    public Artist(UUID artistID, String artistName) {
+        this.artistID = artistID;
+        this.artistName = artistName;
+    }
+
     public UUID getArtistID() {
         return artistID;
     }

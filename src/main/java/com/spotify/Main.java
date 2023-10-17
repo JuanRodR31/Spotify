@@ -4,6 +4,7 @@ import com.spotify.exceptions.NotFoundException;
 import com.spotify.exceptions.UserNameAlreadyTakenException;
 import com.spotify.models.Customer;
 import com.spotify.models.Song;
+import com.spotify.services.ArtistService;
 import com.spotify.services.CustomerService;
 import com.spotify.services.FileService;
 import com.spotify.services.SongService;
@@ -16,9 +17,9 @@ public class Main {
     private static Scanner input=new Scanner(System.in);
     private static CustomerService customerServiceCall= new CustomerService();
     private static SongService songServiceCall = new SongService();
-    private static FileService fileServiceCall =new FileService();
+    private static ArtistService artistServiceCall= new ArtistService();
     private static final String userPattern = "^[a-zA-Z0-9-_-]{8,30}$";
-    private static final String passwordPattern = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*.-]).{8,}$";
+    private static final String passwordPattern = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*._-]).{8,}$";
 
     public static void main(String[] args) throws IOException, ClassNotFoundException, UserNameAlreadyTakenException {
         String option;
@@ -26,6 +27,8 @@ public class Main {
         final String songCSVFilePath = "src/main/resources/songs.csv";
         final String customerBinFileName= "src/main/resources/customers.bin";
         final String songBinFileName= "src/main/resources/songs.bin";
+        final String artistCSVFilePath="src/main/resources/artists.csv";
+        final String playlistCSVFilePah = "src/main/resources/playLists.csv";
         final String delimiter=";";
         FileService fileService = new FileService();
 
@@ -39,7 +42,7 @@ public class Main {
             System.out.println("Option 5: Delete existing song using id");
             System.out.println("Option 6: Delete existing user using username");
             System.out.println("Option 7: Load user data from csv file");
-            System.out.println("Option 8: Load song data from file");
+            System.out.println("Option 8: Load song data from csv file");
             System.out.println("Option 9: Print customer list");
             System.out.println("Option 10: Print song list");
             System.out.println("Option 11: Create new playlist");
@@ -50,6 +53,9 @@ public class Main {
             System.out.println("Option 16: Save song data in bin file");
             System.out.println("Option 17: Load song data from bin file");
             System.out.println("Option 18: Show Report");
+            System.out.println("Option 19: print playlists by User");
+            System.out.println("Option 20: import artists from csv file");
+            System.out.println("Option 21: Print artist List");
             System.out.println("Option 0: Exit");
             System.out.println("Select your option: ");
             option = input.nextLine();
@@ -66,18 +72,7 @@ public class Main {
                     }
                     //3: list songs that contain keyword
                     case "3": {
-                        System.out.println("Enter search parameter: ");
-                        System.out.println("Option 1: Song name");
-                        System.out.println("Option 2: Artist name");
-                        System.out.println("Option 3: Genre");
-                        System.out.println("Option 4: Album");
-                        Set<Integer> parameter = Collections.singleton(Integer.valueOf(input.nextLine()));
-                        System.out.println("Enter search value: ");
-                        String keyWord = input.nextLine();
-                        List<String> filterResult = songServiceCall.getSongsFilteredBy(parameter, keyWord);
-                        for (String result : filterResult) {
-                            System.out.println(result);
-                        }
+                        listSongsThatContainKeyword();
                         break;
                     }
                     case "4": {
@@ -88,12 +83,13 @@ public class Main {
                         }
                         break;
                     }
+                    //5: Delete existing song using id"
                     case "5": {
                         System.out.println("Enter song ID");
                         UUID deleteId = UUID.fromString(input.nextLine());
                         try {
                             songServiceCall.deleteSongByID(deleteId);
-                            System.out.println("user deleted successfully");
+                            System.out.println("Song deleted successfully");
                         } catch (NotFoundException e) {
                             System.out.println("Song not found");
                         }
@@ -118,7 +114,14 @@ public class Main {
                         }
                     }
                     case "8": {
-                        songServiceCall.loadSongsFromCSVFile(songCSVFilePath, delimiter, fileService);
+                        try {
+                            songServiceCall.loadSongsFromCSVFile(songCSVFilePath, delimiter, fileService);
+                        }catch (NotFoundException e){
+                            System.out.println("file not found");
+                        }
+                        catch (IllegalArgumentException e){
+                            System.out.println("Songs in file contain invalid data");
+                        }
                         break;
                     }
                     case "9": {
@@ -155,7 +158,7 @@ public class Main {
                     case "13": {
                         System.out.println("Enter user: ");
                         String customerUserName = input.nextLine();
-                        System.out.println("Enter playlist ID: ");
+                        System.out.println("Enter artist ID: ");
                         UUID artistID = UUID.fromString(input.nextLine());
                         customerServiceCall.addFollowedArtistToCustomer(customerUserName, artistID);
                         break;
@@ -185,11 +188,26 @@ public class Main {
 
                         break;
                     }
-                    //19: print playlists
+                    //19: print playlists by User
                     case "19":{
                         System.out.println("Enter username to search playlists: ");
                         String customerUserName = input.nextLine();
                         customerServiceCall.printUserPlayLists(customerUserName);
+                        break;
+                    }
+                    //20: import artists from csv file
+                    case "20":{
+                        try {
+                            artistServiceCall.loadArtistsFromCSVFile (artistCSVFilePath,delimiter,fileService);
+                        } catch (NotFoundException e) {
+                            System.out.println("File not found");
+                        }
+                        break;
+                    }
+                    //21: Print artist List
+                    case "21": {
+                        artistServiceCall.printArtistList();
+                        break;
                     }
                     case "0": {
                         System.out.println("Bye!");
@@ -277,10 +295,23 @@ public class Main {
 
 
     }
+    private static void listSongsThatContainKeyword(){
+        System.out.println("Enter search parameter: ");
+        System.out.println("Option 1: Song name");
+        System.out.println("Option 2: Artist name");
+        System.out.println("Option 3: Genre");
+        System.out.println("Option 4: Album");
+        Set<Integer> parameter = Collections.singleton(Integer.valueOf(input.nextLine()));
+        System.out.println("Enter search value: ");
+        String keyWord = input.nextLine();
+        List<String> filterResult = songServiceCall.getSongsFilteredBy(parameter, keyWord);
+        for (String result : filterResult) {
+            System.out.println(result);
+        }
+    }
     private static String takeGenre () {
         System.out.println("Enter genre: ");
-        String genre=input.nextLine();
-        return genre;
+        return input.nextLine();
     }
 }
 

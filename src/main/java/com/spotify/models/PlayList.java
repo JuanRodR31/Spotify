@@ -17,6 +17,12 @@ public class PlayList {
         this.playlistName = playlistName;
     }
 
+    public PlayList(UUID playlistID, String playlistName, List<UUID> songIDs) {
+        this.playlistID = playlistID;
+        this.playlistName = playlistName;
+        SongIDs = songIDs;
+    }
+
     public UUID getPlaylistID() {
         return playlistID;
     }

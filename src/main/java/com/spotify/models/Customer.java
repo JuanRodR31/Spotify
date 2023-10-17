@@ -1,6 +1,7 @@
 package com.spotify.models;
 
 import com.spotify.Main;
+import com.spotify.services.FileService;
 
 import java.io.Serializable;
 import java.util.*;
@@ -14,6 +15,7 @@ public class Customer implements Serializable {
     private int clientAge;
     private List<UUID> followedArtist=new ArrayList<>();
     Map <UUID, PlayList> clientPlayListsbyID;
+    FileService fileServiceCall=new FileService();
     //Constructors
     public Customer(){
         this.clientPlayListsbyID= new HashMap<>();
@@ -108,18 +110,6 @@ public class Customer implements Serializable {
         this.clientPlayListsbyID = clientPlayListsbyID;
     }
 
-    //TOSTRING
-    @Override
-    public String toString() {
-        return "Client{" +
-                "userIdentifier=" + userIdentifier +
-                ", user='" + username + '\'' +
-                ", password='" + password + '\'' +
-                ", clientName='" + clientName + '\'' +
-                ", clientLastname='" + clientLastname + '\'' +
-                ", clientAge=" + clientAge +
-                '}';
-    }
 
     public void addFollowedartist(UUID artistID) {
         followedArtist.add(artistID);
