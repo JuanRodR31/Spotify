@@ -189,4 +189,21 @@ public class CustomerService implements Serializable {
         SongService songService= new SongService();
         List<String> artistList=songService.listAllArtists();
     }
+    public void readCustomersWithPlayListsFromCSV(String customersPath,
+                                                  String delimiter,
+                                                  String playlistsPath,
+                                                  FileService fileService) throws IOException {
+        List<Customer> customers = fileService.loadCustomersFromCSVFile(customersPath, delimiter);
+        addCustomerToDatabase(customers);
+        Map<UUID, List<PlayList>> playlistsByCustomerId =
+                fileService.readPlayListFromCSV(playlistsPath, delimiter);
+
+        customers.stream()
+                .forEach(customer ->
+                        addPlaylistsToCustomer(customer,
+                                playlistsByCustomerId.get(customer.getUserIdentifier())));
+
+
+    }
+
 }

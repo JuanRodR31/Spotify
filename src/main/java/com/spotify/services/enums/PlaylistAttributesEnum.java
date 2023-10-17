@@ -3,7 +3,8 @@ package com.spotify.services.enums;
 public enum PlaylistAttributesEnum {
     PLAYLISTID (0, "Playlist ID"),
     PLAYLISTNAME(1, "Playlist name"),
-    PLAYLISTSONGS (2, "Playlist songs");
+    CUSTOMERID (2, "customer ID"),
+    PLAYLISTSONGS (3, "Playlist songs");
     private int index;
     private String headerName;
 

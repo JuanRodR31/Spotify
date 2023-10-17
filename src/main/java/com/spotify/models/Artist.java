@@ -33,4 +33,12 @@ public class Artist implements Serializable {
     public void setArtistName(String artistName) {
         this.artistName = artistName;
     }
+
+    @Override
+    public String toString() {
+        return "Artist{" +
+                "artistID=" + artistID +
+                ", artistName='" + artistName + '\'' +
+                '}';
+    }
 }

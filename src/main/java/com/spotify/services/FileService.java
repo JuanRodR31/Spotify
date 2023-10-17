@@ -179,16 +179,28 @@ public class FileService implements Serializable{
                 .toArray(String[]::new);
     }
 
-    public Map<UUID, PlayList> readPlayListFromCSV(String path, String delimiter) throws IOException {
+    public Map<UUID, List<PlayList>> readPlayListFromCSV(String path, String delimiter) throws IOException {
 
         File file = new File(path);
         List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
-        Map<UUID,PlayList> playListByCustomer = new HashMap<>();
 
-        for(String line : lines){
+        Map<UUID,List<PlayList>> playListByCustomer = new HashMap<>();
+
+
+        for(String line : lines) {
             String[] values = line.split(delimiter);
-            Map.Entry<UUID,PlayList> playlistEntry = getPlayListFromCSVLine(values);
-            playListByCustomer.put(playlistEntry.getKey(),playlistEntry.getValue());
+
+            Map.Entry<UUID, PlayList> playlistEntry = getPlayListFromCSVLine(values);
+
+            if(!playListByCustomer.containsKey(playlistEntry.getKey())) {
+                playListByCustomer.put(playlistEntry.getKey(), new ArrayList<>());
+
+            }
+            List<PlayList> customerPlayList = playListByCustomer.get(playlistEntry.getKey());
+
+            customerPlayList.add(playlistEntry.getValue());
+
+            playListByCustomer.put(playlistEntry.getKey(),customerPlayList);
         }
 
         return playListByCustomer;
@@ -197,19 +209,23 @@ public class FileService implements Serializable{
 
     }
 
-    public Map<UUID, PlayList> readPlayListFromCSVUsingStreams(String path, String delimiter)
+    public Map<UUID, List<PlayList>> readPlayListFromCSVUsingStreams(String path, String delimiter)
             throws IOException {
 
         return Files.lines(new File(path).toPath())
                 .map(line -> line.split(delimiter))
                 .map(this::getPlayListFromCSVLine)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                .collect(Collectors.groupingBy(
+                        Map.Entry::getKey,
+                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())
+                ));
     }
 
     private Map.Entry<UUID,PlayList> getPlayListFromCSVLine(String[] values) {
 
         String id = values[PlaylistAttributesEnum.PLAYLISTID.getIndex()];
         String name = values[PlaylistAttributesEnum.PLAYLISTNAME.getIndex()];
+        String customerId = values[PlaylistAttributesEnum.CUSTOMERID.getIndex()];
         String songIds = values[PlaylistAttributesEnum.PLAYLISTSONGS.getIndex()];
 
         String[] songIdsArray = getArrayFromStringSet(songIds);
@@ -220,7 +236,9 @@ public class FileService implements Serializable{
 
         PlayList playlist = new PlayList(UUID.fromString(id),name, songIdsList);
 
-        return Map.entry(UUID.fromString(id),playlist);
+        return Map.entry(UUID.fromString(customerId),playlist);
+
+    }
 
     }
 

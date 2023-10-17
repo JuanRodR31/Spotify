@@ -48,7 +48,7 @@ public class ArtistService implements Serializable {
 
     public void printArtistList() {
         for (Artist artist: artistList){
-            System.out.println(artist);
+            System.out.println(artist.toString());
         }
     }
 }
