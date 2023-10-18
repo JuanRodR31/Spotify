@@ -22,35 +22,64 @@ public class FileService implements Serializable{
     public static final String OPEN_CURLY_BRACE = "{";
     public static final String CLOSE_CURLY_BRACE = "}";
     public static final String EMPTY_STRING = "";
-    public List<Customer> loadCustomersFromCSVFile(String path, String delimiter) throws IOException {
+    public List<Customer> readCustomersFromCSV(String path, String delimiter) throws IOException {
+
         File file = new File(path);
 
-        List<String> lines =
-                Files.readAllLines(file.toPath(),
-                        StandardCharsets.UTF_8);
+        List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
 
-        List<Customer> customerList = new ArrayList<>();
+        List<Customer> customers = new ArrayList<>();
 
         for (String line : lines) {
-            String[] values = line.split(delimiter);
-            UUID userID =
-                    UUID.fromString(values[CustomerAttributesEnum.CUSTOMERID.getIndex()]);
-            String userName =
-                    values[CustomerAttributesEnum.USERNAME.getIndex()];
-            String customerPassword =
-                    values[CustomerAttributesEnum.PASSWORD.getIndex()];
-            String customerName=
-                    values[CustomerAttributesEnum.CUSTOMERNAME.getIndex()];
-            String customerLastName =
-                    values[CustomerAttributesEnum.CUSTOMERLASTNAME.getIndex()];
-            int customerAge =
-                    Integer.valueOf(values[CustomerAttributesEnum.CUSTOMERAGE.getIndex()]);
 
-            Customer customer = new Customer(userID,userName,customerPassword,customerName,customerLastName,customerAge);
-            customerList.add(customer);
+            String[] values = line.split(delimiter);
+
+            // Extract song data from the CSV line.
+            Customer artist = getCustomerFromCSVLine(values);
+
+            customers.add(artist);
+
+
         }
-        return customerList;
+        return customers;
     }
+
+    public List<Customer> readCustomersFromCSVUsingStreams(String path, String delimiter)
+            throws IOException {
+        return Files.lines(new File(path).toPath())
+                .map(line -> line.split(delimiter))
+                .map(this::getCustomerFromCSVLine)
+                .collect(Collectors.toList());
+    }
+
+    private Customer getCustomerFromCSVLine(String[] values) {
+
+        String id = values[CustomerAttributesEnum.CUSTOMERID.getIndex()];
+        String username = values[CustomerAttributesEnum.USERNAME.getIndex()];
+        String password = values[CustomerAttributesEnum.PASSWORD.getIndex()];
+        String name = values[CustomerAttributesEnum.CUSTOMERNAME.getIndex()];
+        String lastName = values[CustomerAttributesEnum.CUSTOMERLASTNAME.getIndex()];
+        int age = Integer.parseInt(values[CustomerAttributesEnum.CUSTOMERAGE.getIndex()]);
+        String artistFollowedIds = values[CustomerAttributesEnum.FOLLOWEDARTISTS.getIndex()];
+
+        Customer customer = new Customer(UUID.fromString(id), username, password, name, lastName, age);
+
+        String artistIdsFollowed =
+                extractElementsBetweenCurlyBraces(artistFollowedIds);
+
+        String[] artistIdsFollowedArray = splitAndDeleteSpaces(artistIdsFollowed, COMMA_DELIMITER);
+
+        for(String artistIds : artistIdsFollowedArray){
+            customer.addFollowedArtist(UUID.fromString(artistIds));
+        }
+        Set<UUID> artistIdsFollowedSet = Stream.of(artistIdsFollowedArray)
+                .map(UUID::fromString)
+                .collect(Collectors.toSet());
+
+        Customer alternativeCustomer = new Customer(UUID.fromString(id), username, password, name, lastName, age, artistIdsFollowedSet);
+        return customer;
+    }
+
     public List<Song> loadSongFromCSVFile(String path, String delimiter) throws IOException {
         File file = new File(path);
 
@@ -181,6 +210,7 @@ public class FileService implements Serializable{
 
     public Map<UUID, List<PlayList>> readPlayListFromCSV(String path, String delimiter) throws IOException {
 
+
         File file = new File(path);
         List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
 
@@ -190,7 +220,7 @@ public class FileService implements Serializable{
         for(String line : lines) {
             String[] values = line.split(delimiter);
 
-            Map.Entry<UUID, PlayList> playlistEntry = getPlayListFromCSVLine(values);
+            Map.Entry<UUID,PlayList> playlistEntry = getPlayListFromCSVLine(values);
 
             if(!playListByCustomer.containsKey(playlistEntry.getKey())) {
                 playListByCustomer.put(playlistEntry.getKey(), new ArrayList<>());
@@ -204,7 +234,6 @@ public class FileService implements Serializable{
         }
 
         return playListByCustomer;
-
 
 
     }
@@ -237,8 +266,6 @@ public class FileService implements Serializable{
         PlayList playlist = new PlayList(UUID.fromString(id),name, songIdsList);
 
         return Map.entry(UUID.fromString(customerId),playlist);
-
-    }
 
     }
 

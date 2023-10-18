@@ -48,4 +48,16 @@ public class PlayList implements Serializable {
         SongIDs = songIDs;
     }
 
+    @Override
+    public String toString() {
+        return "PlayList{" +
+                "playlistID=" + playlistID +
+                ", playlistName='" + playlistName + '\'' +
+                ", SongIDs=" + SongIDs +
+                '}';
+    }
+
+    public void addSong(UUID songID) {
+        SongIDs.add(songID);
+    }
 }

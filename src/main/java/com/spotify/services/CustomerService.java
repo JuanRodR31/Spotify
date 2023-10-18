@@ -2,25 +2,23 @@ package com.spotify.services;
 
 import com.spotify.exceptions.NotFoundException;
 import com.spotify.exceptions.UserNameAlreadyTakenException;
-import com.spotify.models.Artist;
 import com.spotify.models.Customer;
 import com.spotify.models.PlayList;
-import com.spotify.models.Song;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class CustomerService implements Serializable {
 
     private final String userPattern = "^[a-zA-Z0-9-_-]{8,30}$";
     private final String passwordPattern = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*._-]).{8,}$";
-
     Map<UUID, Customer> customerByID;
     Map<String, Customer> customerByUsername;
     ArtistService artistServiceCall =new ArtistService();
-
+    private static List<Customer> customers = new ArrayList<>();
     public CustomerService() {
         this.customerByID = new HashMap<>();
         this.customerByUsername = new HashMap<>();
@@ -39,6 +37,7 @@ public class CustomerService implements Serializable {
             throw new IllegalArgumentException(String.format("Client is not an adult"));
         }
         Customer customer=new Customer(username,userPassword,clientName,clientLastname,clientAge);
+        customers.add(customer);
         return addCustomerToDatabase(customer);
     }
 
@@ -59,6 +58,7 @@ public class CustomerService implements Serializable {
         if (customer.getClientLastname()==null || customer.getClientLastname().isEmpty()){
             throw new IllegalArgumentException("Customer lastname can't be null");
         }
+        customers.add(customer);
         return customerByID.put(customer.getUserIdentifier(),customer)== null && customerByUsername.put(customer.getUsername(), customer)==null;
     }
 
@@ -119,9 +119,9 @@ public class CustomerService implements Serializable {
     public boolean loadCustomersFromCSVFile(String path,
                                          String delimiter,
                                          FileService fileService)
-            throws IOException, NotFoundException {
+            throws IOException {
 
-        List<Customer> customers = fileService.loadCustomersFromCSVFile(path, delimiter);
+        List<Customer> customers = fileService.readCustomersFromCSV(path, delimiter);
 
         return addCustomerToDatabase(customers);
     }
@@ -150,13 +150,7 @@ public class CustomerService implements Serializable {
     }
 
 
-    public void createNewPlayList(String customerUsername, String playlistName) {
-        for (Customer customerToSearch : customerByID.values()){
-            if (customerToSearch.getUsername().equals(customerUsername)){
-                customerToSearch.addPlaylist(playlistName);
-            }
-        }
-    }
+
     public void printUserPlayLists (String customerUsername){
         for (Customer customerToSearch : customerByID.values()){
             if (customerToSearch.getUsername().equals(customerUsername)){
@@ -165,7 +159,15 @@ public class CustomerService implements Serializable {
         }
     }
     public void addSongsToCustomerPlayList(String costumerUsername, UUID playListID, UUID songID) {
-
+        for (Customer customer: customerByID.values()){
+            if (customer.getUsername().equals(costumerUsername)){
+                for (PlayList playList :customer.getClientPlayListsbyID().values()){
+                    if (playList.getPlaylistID().equals(playListID)){
+                        playList.addSong(songID);
+                    }
+                }
+            }
+        }
     }
     public UUID searchUUIDBasedOnSongName (String songName){
         return null;
@@ -174,11 +176,13 @@ public class CustomerService implements Serializable {
         return customerByID.values().stream()
                 .toList();
     }
-    public void addFollowedArtistToCustomer (String customerUsername, UUID artistID){
-        boolean artistExists=artistServiceCall.verifyIfArtistExists(artistID);
+    public void addFollowedArtistToCustomer (String customerUsername, UUID artistID, ArtistService artistServiceCall){
+        boolean artistExists= artistServiceCall.verifyIfArtistExists(artistID);
         if (artistExists){
             for (Customer customer: customerByID.values()){
-                customer.addFollowedartist(artistID);
+                if (customer.getUsername().equalsIgnoreCase(customerUsername)){
+                    customer.addFollowedArtist(artistID);
+                }
             }
         }
         else{
@@ -193,16 +197,39 @@ public class CustomerService implements Serializable {
                                                   String delimiter,
                                                   String playlistsPath,
                                                   FileService fileService) throws IOException {
-        List<Customer> customers = fileService.loadCustomersFromCSVFile(customersPath, delimiter);
-        addCustomerToDatabase(customers);
+        List<Customer> customers =
+                fileService.readCustomersFromCSV(customersPath, delimiter);
+
         Map<UUID, List<PlayList>> playlistsByCustomerId =
                 fileService.readPlayListFromCSV(playlistsPath, delimiter);
 
-        customers.stream()
-                .forEach(customer ->
-                        addPlaylistsToCustomer(customer,
-                                playlistsByCustomerId.get(customer.getUserIdentifier())));
+        addPlaylistsToCustomers(customers, playlistsByCustomerId);
+        addCustomerToDatabase(customers);
+    }
+    private void addPlaylistsToCustomers(List<Customer> customersWithoutPlayLists, Map<UUID, List<PlayList>> playlistsByCustomerId) {
+        for(Customer customer : customersWithoutPlayLists){
+            List<PlayList> playlists = playlistsByCustomerId.get(customer.getUserIdentifier());
+            if(playlists != null){
+                customer.addPlayLists(playlists);
+            }
+        }
 
+    }
+
+
+    public void createNewPlayList(String customerUserName, String playListName) {
+        for (Customer customer: customerByID.values()){
+            if (customer.getUsername().equals(customerUserName)){
+                PlayList playList=new PlayList(playListName);
+                customer.addPlaylist(playList);
+            }
+        }
+    }
+    public List<UUID> obtainIDsOfAllFollowedArtists() {
+
+        return customers.stream()
+                .flatMap(cliente -> cliente.getFollowedArtist().stream())
+                .collect(Collectors.toList());
 
     }
 

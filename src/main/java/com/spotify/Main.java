@@ -2,8 +2,6 @@ package com.spotify;
 
 import com.spotify.exceptions.NotFoundException;
 import com.spotify.exceptions.UserNameAlreadyTakenException;
-import com.spotify.models.Customer;
-import com.spotify.models.Song;
 import com.spotify.services.ArtistService;
 import com.spotify.services.CustomerService;
 import com.spotify.services.FileService;
@@ -52,14 +50,13 @@ public class Main {
             System.out.println("Option 15: Load customer data from bin file");
             System.out.println("Option 16: Save song data in bin file");
             System.out.println("Option 17: Load song data from bin file");
-            System.out.println("Option 18: Show Report");
-            System.out.println("Option 19: print playlists by User");
+            System.out.println("Option 18: Create, Delete or modify artist");
+            System.out.println("Option 19: Show Report");
             System.out.println("Option 20: import artists from csv file");
             System.out.println("Option 21: Print artist List");
             System.out.println("Option 0: Exit");
             System.out.println("Select your option: ");
             option = input.nextLine();
-            try {
                 switch (option) {
 
                     case "1": {
@@ -108,19 +105,16 @@ public class Main {
                     }
                     case "7": {
                         try {
-                            customerServiceCall.loadCustomersFromCSVFile(customerCSVFilePath, delimiter, fileService);
-                        } catch (NotFoundException e) {
-                            System.out.println("file not found");
+                            customerServiceCall.readCustomersWithPlayListsFromCSV(customerCSVFilePath,delimiter,playlistCSVFilePah,fileService);
+                        } catch (IOException e) {
+                            System.out.println(e.getMessage());
                         }
                     }
                     case "8": {
                         try {
                             songServiceCall.loadSongsFromCSVFile(songCSVFilePath, delimiter, fileService);
-                        }catch (NotFoundException e){
-                            System.out.println("file not found");
-                        }
-                        catch (IllegalArgumentException e){
-                            System.out.println("Songs in file contain invalid data");
+                        }catch (IOException e){
+                            System.out.println(e.getMessage());
                         }
                         break;
                     }
@@ -149,9 +143,14 @@ public class Main {
                         UUID playlistID = UUID.fromString(input.nextLine());
                         System.out.println("Enter song ID: ");
                         UUID songID = UUID.fromString(input.nextLine());
-                    /*System.out.println("Enter song name to search: ");
-                    String songNameToSearch= input.nextLine();*/
-                        //customerServiceCall.addSongsToCustomerPlayList(customerUserName,playlistID, songID);
+                        boolean songExists = songServiceCall.verifyIfSongExists(songID);
+                        if (songExists){
+                            customerServiceCall.addSongsToCustomerPlayList(customerUserName,playlistID, songID);
+                        }
+                        else {
+                            System.out.println("Song does not exist");
+                        }
+
                         break;
                     }
                     //13: Follow an artist using user
@@ -160,7 +159,7 @@ public class Main {
                         String customerUserName = input.nextLine();
                         System.out.println("Enter artist ID: ");
                         UUID artistID = UUID.fromString(input.nextLine());
-                        customerServiceCall.addFollowedArtistToCustomer(customerUserName, artistID);
+                        customerServiceCall.addFollowedArtistToCustomer(customerUserName, artistID, artistServiceCall);
                         break;
                     }
                     //14: Save customer data in bin file
@@ -183,16 +182,49 @@ public class Main {
                         songServiceCall.loadSongsFromBinaryFileUsingTheEntireList(songBinFileName, fileService);
                         break;
                     }
-                    //18: Show Report
+                    //18: Create, Delete or modify artist
                     case "18": {
-
+                        System.out.println("1.Create artist\n2.Delete artist\n3. Modify artist");
+                        String artistOption=input.nextLine();
+                        switch (artistOption){
+                            case "1":{
+                                System.out.println("Enter artist name");
+                                String artistName=input.nextLine();
+                                artistServiceCall.createArtist(artistName);
+                                break;
+                            }
+                            case "2":{
+                                System.out.println("Enter artist name");
+                                String artistName=input.nextLine();
+                                artistServiceCall.deleteArtistFromName(artistName);
+                                break;
+                            }
+                            case  "3":{
+                                System.out.println("Enter artist name");
+                                String artistName=input.nextLine();
+                                System.out.println("Enter new artist name");
+                                String newArtistName =input.nextLine();
+                                artistServiceCall.modifyArtist(artistName,newArtistName);
+                                break;
+                            }
+                        }
                         break;
                     }
-                    //19: print playlists by User
+                    //19: Show Reports
                     case "19":{
-                        System.out.println("Enter username to search playlists: ");
-                        String customerUserName = input.nextLine();
-                        customerServiceCall.printUserPlayLists(customerUserName);
+                        System.out.println("1. Show artist Followers\n2. Show artist popularity");
+                        String reportOption=input.nextLine();
+                        switch (reportOption){
+                            case "1":{
+                                printArtistFollowersReport(artistServiceCall,customerServiceCall,songServiceCall);
+                                break;
+                            }
+                            case "2": {
+                                System.out.println("Profe, le eché muchas ganas pero no pude, valore el esfuerzo :c");
+                                break;
+                            }
+                        }
+
                         break;
                     }
                     //20: import artists from csv file
@@ -215,16 +247,14 @@ public class Main {
                     }
 
                     default:
-                        throw new IllegalStateException("Unexpected value: " + option);
+                        System.out.println("Unexpected value: " + option);
                 }
-                }catch (IllegalStateException e){
-                    System.out.println("Invalid option");
-                }
+
             }
             while (!option.equalsIgnoreCase("0")) ;
 
     }
-    private static void takeUserData () throws UserNameAlreadyTakenException {
+    private static void takeUserData (){
         System.out.println("Enter user: ");
         String userName=input.nextLine();
         System.out.println("Enter password: ");
@@ -238,25 +268,8 @@ public class Main {
         try {
             customerServiceCall.addCustomerToDatabase(userName,userPassword,clientName,clientLastname,clientAge);
             System.out.println("Customer created successfully");
-        }catch (UserNameAlreadyTakenException e){
-        System.out.println("User Already taken");
-        }
-        catch (IllegalArgumentException e){
-            if (clientAge<18){
-                System.out.println("User is not an adult");
-            }
-            if (!userName.matches(userPattern)){
-                System.out.println("Customer username must contain 8 to 30 characters and cannot use special characters despite of _");
-            }
-            if (!userPassword.matches(passwordPattern)){
-                System.out.println("Customer password must contain 8 characters, one upper case letter, one number and one special character.");
-            }
-            if (clientName == null || clientName.isEmpty()){
-                System.out.println("Customer name can't be empty");
-            }
-            if (clientLastname==null || clientLastname.isEmpty()){
-                System.out.println("Customer lastname can't be empty");
-            }
+        }catch (UserNameAlreadyTakenException | IllegalArgumentException e){
+        System.out.println(e.getMessage());
         }
 
     }
@@ -275,22 +288,7 @@ public class Main {
             songServiceCall.addSongToDatabase(songName, artistName, genre, songLength, songAlbum);
             System.out.println("Song created successfully");
         }catch (IllegalArgumentException e){
-
-            if(songName == null || songName.isEmpty()){
-                System.out.println("Song name can't be empty");
-            }
-            if (artistName==null || artistName.isEmpty()){
-                System.out.println("Artist name can't be empty");
-            }
-            if (genre == null || genre.isEmpty()){
-                System.out.println("genre can't be empty");
-            }
-            if (songLength<0) {
-                System.out.println("Song length can't be 0" );
-            }
-            if (songAlbum==null || songAlbum.isEmpty()){
-                System.out.println("Album can't be empty");
-            }
+            System.out.println(e.getMessage());
         }
 
 
@@ -313,5 +311,32 @@ public class Main {
         System.out.println("Enter genre: ");
         return input.nextLine();
     }
-}
+    public static void printArtistFollowersReport(ArtistService artistService,
+                                                  CustomerService customerService,
+                                                  SongService songService) {
+        Map<String, Long> reporte = artistFollowersReport(artistService, customerService, songService);
+        System.out.println("Artist    // Followers");
+        for (Map.Entry<String, Long> entry : reporte.entrySet()) {
+            String artist = entry.getKey();
+            Long Followers = entry.getValue();
+            System.out.println(artist +"  "+ Followers);
+        }
+    }
+    public static Map<String, Long> artistFollowersReport(ArtistService artistService,
+                                                          CustomerService customerService,
+                                                          SongService songService) {
+        List<UUID> idsSeguidores = customerService.obtainIDsOfAllFollowedArtists();
+        Map<String, Long> cantidadDeSeguidoresParaCadaArtista = new HashMap<>();
 
+        for (UUID idSeguidor : idsSeguidores) {
+            String nombreArtista = getArtistByID(idSeguidor, artistService);
+            cantidadDeSeguidoresParaCadaArtista.put(nombreArtista, cantidadDeSeguidoresParaCadaArtista.getOrDefault(nombreArtista, 0L) + 1);
+        }
+
+        return cantidadDeSeguidoresParaCadaArtista;
+    }
+    public static String getArtistByID(UUID followerID, ArtistService artistService) {
+            return artistService.getArtistNameUsingID(followerID);
+    }
+
+}

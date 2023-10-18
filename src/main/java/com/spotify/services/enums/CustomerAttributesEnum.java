@@ -6,7 +6,8 @@ public enum CustomerAttributesEnum {
     PASSWORD (2, "customerPassword"),
     CUSTOMERNAME (3, "customerName"),
     CUSTOMERLASTNAME (4, "customerLastName"),
-    CUSTOMERAGE(5, "customerAge");
+    CUSTOMERAGE(5, "customerAge"),
+    FOLLOWEDARTISTS(6, "followedArtists");
     private int index;
     private String headerName;
 

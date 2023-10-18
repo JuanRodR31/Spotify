@@ -6,7 +6,10 @@ import com.spotify.models.Song;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import static java.lang.Integer.parseInt;
 
@@ -132,7 +135,7 @@ public class SongService implements Serializable {
     public boolean loadSongsFromCSVFile(String path,
                                             String delimiter,
                                             FileService fileService)
-            throws IOException, NotFoundException{
+            throws IOException{
 
         List<Song> songs = fileService.loadSongFromCSVFile(path, delimiter);
 
@@ -161,4 +164,22 @@ public class SongService implements Serializable {
             System.out.println(songs.getValue());
         }
     }
+
+    public boolean verifyIfSongExists(UUID songID) {
+        for (Song song : songByID.values()){
+            if (song.getSongIdentifier().equals(songID)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public List<UUID> getALlIDs() {
+        List<UUID> allIDs = new ArrayList<>();
+        for (Song song : songByID.values()){
+            allIDs.add(song.getSongIdentifier());
+        }
+        return allIDs;
+    }
+
 }
