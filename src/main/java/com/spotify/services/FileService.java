@@ -151,7 +151,8 @@ public class FileService implements Serializable{
 
         File file = new File(filePath);
         try(FileInputStream fis = new FileInputStream(file);
-            ObjectInputStream ois = new ObjectInputStream(fis)) {
+            ObjectInputStream ois = new ObjectInputStream(fis)
+        ) {
             return (ArrayList<Song>) ois.readObject();
 
         }
