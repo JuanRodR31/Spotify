@@ -43,11 +43,8 @@ public class Main {
                 case "8" -> loadSongsFromCSVFile();
                 case "9" -> customerServiceCall.printCustomerMap();
                 case "10" -> songServiceCall.printSongMap();
-                //11. Create new playlist
                 case "11" -> createNewPlayList();
-                //12: Add songs to existing playlist
                 case "12" -> addSongsToPlayList();
-                //13: Follow an artist using user
                 case "13" -> followAnArtistUsingID();
                 //14: Save customer data in bin file
                 case "14" -> customerServiceCall.saveCustomersToBinaryFileUsingTheEntireList(customerBinFileName, fileService);
@@ -57,11 +54,8 @@ public class Main {
                 case "16" -> songServiceCall.saveSongsToBinaryFileUsingTheEntireList(songBinFileName, fileService);
                 //17: Load song data from bin file
                 case "17" -> songServiceCall.loadSongsFromBinaryFileUsingTheEntireList(songBinFileName, fileService);
-                //18: Create, Delete or modify artist
                 case "18" -> createDeleteOrModifyArtist();
-                //19: Show Reports
                 case "19" -> showReports();
-                //20: import artists from csv file
                 case "20" ->loadArtistFromCSVFile();
                 case "21" -> artistServiceCall.printArtistList();
                 case "0" -> System.out.println("Bye!");
@@ -128,19 +122,17 @@ public class Main {
             return input.nextLine();
         }
         public static void printArtistFollowersReport (ArtistService artistService,
-                CustomerService customerService,
-                SongService songService){
-            Map<String, Long> reporte = artistFollowersReport(artistService, customerService, songService);
-            System.out.println("Artist    // Followers");
-            for (Map.Entry<String, Long> entry : reporte.entrySet()) {
+                CustomerService customerService){
+            Map<String, Long> report = artistFollowersReport(artistService, customerService);
+            System.out.println("Artist  // Followers");
+            for (Map.Entry<String, Long> entry : report.entrySet()) {
                 String artist = entry.getKey();
                 Long Followers = entry.getValue();
-                System.out.println(artist + "  " + Followers);
+                System.out.println(artist + "\t" + Followers);
             }
         }
         public static Map<String, Long> artistFollowersReport (ArtistService artistService,
-                CustomerService customerService,
-                SongService songService){
+                CustomerService customerService){
             List<UUID> idsSeguidores = customerService.obtainIDsOfAllFollowedArtists();
             Map<String, Long> cantidadDeSeguidoresParaCadaArtista = new HashMap<>();
 
@@ -234,11 +226,16 @@ public class Main {
             System.out.println("1. Show artist Followers\n2. Show artist popularity");
             String reportOption = input.nextLine();
             switch (reportOption) {
-                case "1"-> printArtistFollowersReport(artistServiceCall, customerServiceCall, songServiceCall);
-                case "2"-> System.out.println("Profe, le eché muchas ganas pero no pude, valore el esfuerzo :c");
+                case "1"-> printArtistFollowersReport(artistServiceCall, customerServiceCall);
+                case "2"-> printArtistPopularityReport (artistServiceCall,customerServiceCall,songServiceCall);
             }
         }
-        private static void createDeleteOrModifyArtist () {
+
+    private static void printArtistPopularityReport(ArtistService artistServiceCall, CustomerService customerServiceCall, SongService songServiceCall) {
+
+    }
+
+    private static void createDeleteOrModifyArtist () {
             System.out.println("1.Create artist\n2.Delete artist\n3. Modify artist");
             String artistOption = input.nextLine();
             switch (artistOption) {
