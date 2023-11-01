@@ -4,6 +4,7 @@ import com.spotify.exceptions.NotFoundException;
 import com.spotify.exceptions.UserNameAlreadyTakenException;
 import com.spotify.models.Customer;
 import com.spotify.models.PlayList;
+import com.spotify.models.PremiumCustomer;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -25,7 +26,7 @@ public class CustomerService implements Serializable {
     }
 
 
-    public boolean addCustomerToDatabase(String username,
+    public boolean addCustomerToDatabase(String customerType, String username,
                                          String userPassword,
                                          String clientName,
                                          String clientLastname,
@@ -59,7 +60,7 @@ public class CustomerService implements Serializable {
             throw new IllegalArgumentException("Customer lastname can't be null");
         }
         customers.add(customer);
-        return customerByID.put(customer.getUserIdentifier(),customer)== null && customerByUsername.put(customer.getUsername(), customer)==null;
+        return customerByID.put(customer.getCustomerIdentifier(),customer)== null && customerByUsername.put(customer.getUsername(), customer)==null;
     }
 
 
@@ -88,7 +89,7 @@ public class CustomerService implements Serializable {
         }
 
         Customer customer = customerByUsername.get(username);
-        return customerByUsername.remove(username) != null && customerByID.remove(customer.getUserIdentifier()) != null;
+        return customerByUsername.remove(username) != null && customerByID.remove(customer.getCustomerIdentifier()) != null;
     }
 
 
@@ -151,17 +152,18 @@ public class CustomerService implements Serializable {
 
 
 
-    public void printUserPlayLists (String customerUsername){
+    /*public void printUserPlayLists (String customerUsername){
         for (Customer customerToSearch : customerByID.values()){
             if (customerToSearch.getUsername().equals(customerUsername)){
                 System.out.println(customerToSearch.getClientPlayListsbyID());
             }
         }
-    }
+    }*/
+
     public void addSongsToCustomerPlayList(String costumerUsername, UUID playListID, UUID songID) {
         for (Customer customer: customerByID.values()){
             if (customer.getUsername().equals(costumerUsername)){
-                for (PlayList playList :customer.getClientPlayListsbyID().values()){
+                for (PlayList playList : customer.getPlaylists()){
                     if (playList.getPlaylistID().equals(playListID)){
                         playList.addSong(songID);
                     }
@@ -208,9 +210,9 @@ public class CustomerService implements Serializable {
     }
     private void addPlaylistsToCustomers(List<Customer> customersWithoutPlayLists, Map<UUID, List<PlayList>> playlistsByCustomerId) {
         for(Customer customer : customersWithoutPlayLists){
-            List<PlayList> playlists = playlistsByCustomerId.get(customer.getUserIdentifier());
+            List<PlayList> playlists = playlistsByCustomerId.get(customer.getCustomerIdentifier());
             if(playlists != null){
-                customer.addPlayLists(playlists);
+                customer.addPlaylists(playlists);
             }
         }
 
@@ -221,7 +223,7 @@ public class CustomerService implements Serializable {
         for (Customer customer: customerByID.values()){
             if (customer.getUsername().equals(customerUserName)){
                 PlayList playList=new PlayList(playListName);
-                customer.addPlaylist(playList);
+                customer.addPlaylist(String.valueOf(playList));
             }
         }
     }

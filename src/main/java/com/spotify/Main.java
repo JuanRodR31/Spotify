@@ -16,8 +16,6 @@ public class Main {
     private static CustomerService customerServiceCall= new CustomerService();
     private static SongService songServiceCall = new SongService();
     private static ArtistService artistServiceCall= new ArtistService();
-    private static final String userPattern = "^[a-zA-Z0-9-_-]{8,30}$";
-    private static final String passwordPattern = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*._-]).{8,}$";
     private static final String customerCSVFilePath ="src/main/resources/customers.csv";
     private static final String songCSVFilePath = "src/main/resources/songs.csv";
     private static final String customerBinFileName= "src/main/resources/customers.bin";

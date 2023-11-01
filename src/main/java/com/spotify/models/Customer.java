@@ -1,23 +1,23 @@
 package com.spotify.models;
 
-import com.spotify.Main;
-import com.spotify.services.FileService;
+import com.spotify.exceptions.MaxSongsInPlayList;
+import com.spotify.exceptions.NotFoundException;
 
 import java.io.Serializable;
 import java.util.*;
 
-public class Customer implements Serializable {
-    private UUID userIdentifier;
-    private String username;
-    private String password;
-    private String clientName;
-    private String clientLastname;
-    private int clientAge;
+public abstract class Customer implements Serializable {
+    protected String customerType;
+    protected UUID customerIdentifier;
+    protected String username;
+    protected String password;
+    protected String clientName;
+    protected String clientLastname;
+    protected int clientAge;
     Set<UUID> followedArtist = new HashSet<>();
-    private Map <UUID, PlayList> clientPlayListsbyID;
+
     //Constructors
     public Customer(){
-        this.clientPlayListsbyID= new HashMap<>();
     }
 
     public Set<UUID> getFollowedArtist() {
@@ -29,28 +29,26 @@ public class Customer implements Serializable {
     }
 
     public Customer(String user, String password, String clientName, String clientLastname, int clientAge) {
-        this.userIdentifier = UUID.randomUUID();
+        this.customerIdentifier = UUID.randomUUID();
         this.username = user;
         this.password = password;
         this.clientName = clientName;
         this.clientLastname = clientLastname;
         this.clientAge = clientAge;
-        this.clientPlayListsbyID=new HashMap<>();
 
     }
 
-    public Customer(UUID userIdentifier, String user, String password, String clientName, String clientLastname, int clientAge) {
-        this.userIdentifier = userIdentifier;
+    public Customer( UUID customerIdentifier, String user, String password, String clientName, String clientLastname, int clientAge) {
+        this.customerIdentifier = customerIdentifier;
         this.username = user;
         this.password = password;
         this.clientName = clientName;
         this.clientLastname = clientLastname;
         this.clientAge = clientAge;
-        this.clientPlayListsbyID=new HashMap<>();
     }
 
-    public Customer(UUID userIdentifier, String username, String password, String clientName, String clientLastname, int clientAge, Set<UUID>followedArtist) {
-        this.userIdentifier = userIdentifier;
+    public Customer(UUID customerIdentifier, String username, String password, String clientName, String clientLastname, int clientAge, Set<UUID>followedArtist) {
+        this.customerIdentifier = customerIdentifier;
         this.username = username;
         this.password = password;
         this.clientName = clientName;
@@ -101,37 +99,24 @@ public class Customer implements Serializable {
         this.clientAge = clientAge;
     }
 
-    public UUID getUserIdentifier() {
-        return userIdentifier;
+    public UUID getCustomerIdentifier() {
+        return customerIdentifier;
     }
 
-    public void setUserIdentifier(UUID userIdentifier) {
-        this.userIdentifier = userIdentifier;
-    }
-
-    public void addPlaylist (PlayList playlist){
-        clientPlayListsbyID.put(playlist.getPlaylistID(),playlist);
-    }
-
-    public Map<UUID, PlayList> getClientPlayListsbyID() {
-        return clientPlayListsbyID;
-    }
-
-    public void setClientPlayListsbyID(Map<UUID, PlayList> clientPlayListsbyID) {
-        this.clientPlayListsbyID = clientPlayListsbyID;
+    public void setCustomerIdentifier(UUID customerIdentifier) {
+        this.customerIdentifier = customerIdentifier;
     }
 
     @Override
     public String toString() {
         return "Customer{" +
-                "userIdentifier=" + userIdentifier +
+                "userIdentifier=" + customerIdentifier +
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
                 ", clientName='" + clientName + '\'' +
                 ", clientLastname='" + clientLastname + '\'' +
                 ", clientAge=" + clientAge +
                 ", followedArtist=" + followedArtist +
-                ", clientPlayListsbyID=" + clientPlayListsbyID.values().toString()+
                 '}';
     }
 
@@ -139,12 +124,7 @@ public class Customer implements Serializable {
         followedArtist.add(artistID);
     }
 
-    public void addPlayLists(List<PlayList> playlists) {
-        for (PlayList playlist : playlists) {
-            UUID playlistID = playlist.getPlaylistID();
-            clientPlayListsbyID.put(playlistID, playlist);
-        }
-    }
+
     public Integer countFollowedArtist (UUID artistID){
         Integer counter=0;
         for (UUID artist : followedArtist) {
@@ -154,4 +134,11 @@ public class Customer implements Serializable {
         }
         return counter;
     }
+    public abstract void addPlaylist(String name);
+    public abstract List<PlayList> getPlaylists();
+    public abstract void addPlaylists(List<PlayList> playlists);
+    public abstract void removePlaylist(UUID playlistId) throws NotFoundException;
+    public abstract void addSongToPlaylist(UUID playlistId, UUID songId) throws MaxSongsInPlayList, NotFoundException;
+    public abstract void removeSongFromPlaylist(UUID playlistId, UUID songId);
+    public abstract List<UUID> getSongsFromPlaylist(UUID playlistId);
 }
