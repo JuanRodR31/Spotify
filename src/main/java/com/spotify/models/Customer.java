@@ -17,8 +17,6 @@ public abstract class Customer implements Serializable {
     Set<UUID> followedArtist = new HashSet<>();
 
     //Constructors
-    public Customer(){
-    }
 
     public Set<UUID> getFollowedArtist() {
         return followedArtist;
@@ -28,7 +26,8 @@ public abstract class Customer implements Serializable {
         this.followedArtist = followedArtist;
     }
 
-    public Customer(String user, String password, String clientName, String clientLastname, int clientAge) {
+    public Customer(String customerType,String user, String password, String clientName, String clientLastname, int clientAge) {
+        this.customerType =customerType;
         this.customerIdentifier = UUID.randomUUID();
         this.username = user;
         this.password = password;
@@ -38,16 +37,19 @@ public abstract class Customer implements Serializable {
 
     }
 
-    public Customer( UUID customerIdentifier, String user, String password, String clientName, String clientLastname, int clientAge) {
-        this.customerIdentifier = customerIdentifier;
+    public Customer(String customerType,UUID userUUID,String user, String password, String clientName, String clientLastname, int clientAge) {
+        this.customerType =customerType;
+        this.customerIdentifier = userUUID;
         this.username = user;
         this.password = password;
         this.clientName = clientName;
         this.clientLastname = clientLastname;
         this.clientAge = clientAge;
+
     }
 
-    public Customer(UUID customerIdentifier, String username, String password, String clientName, String clientLastname, int clientAge, Set<UUID>followedArtist) {
+    public Customer(String customerType, UUID customerIdentifier, String username, String password, String clientName, String clientLastname, int clientAge, Set<UUID>followedArtist) {
+        this.customerType =customerType;
         this.customerIdentifier = customerIdentifier;
         this.username = username;
         this.password = password;
@@ -110,7 +112,8 @@ public abstract class Customer implements Serializable {
     @Override
     public String toString() {
         return "Customer{" +
-                "userIdentifier=" + customerIdentifier +
+                "customerType='" + customerType + '\'' +
+                ", customerIdentifier=" + customerIdentifier +
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
                 ", clientName='" + clientName + '\'' +
@@ -139,6 +142,6 @@ public abstract class Customer implements Serializable {
     public abstract void addPlaylists(List<PlayList> playlists);
     public abstract void removePlaylist(UUID playlistId) throws NotFoundException;
     public abstract void addSongToPlaylist(UUID playlistId, UUID songId) throws MaxSongsInPlayList, NotFoundException;
-    public abstract void removeSongFromPlaylist(UUID playlistId, UUID songId);
-    public abstract List<UUID> getSongsFromPlaylist(UUID playlistId);
+    public abstract void removeSongFromPlaylist(UUID playlistId, UUID songId) throws NotFoundException;
+    public abstract List<UUID> getSongsFromPlaylist(UUID playlistId) throws NotFoundException;
 }

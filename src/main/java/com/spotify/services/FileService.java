@@ -1,9 +1,6 @@
 package com.spotify.services;
 
-import com.spotify.models.Artist;
-import com.spotify.models.Customer;
-import com.spotify.models.PlayList;
-import com.spotify.models.Song;
+import com.spotify.models.*;
 import com.spotify.services.enums.CustomerAttributesEnum;
 import com.spotify.services.enums.PlaylistAttributesEnum;
 import com.spotify.services.enums.SongAttributesEnum;
@@ -53,7 +50,7 @@ public class FileService implements Serializable{
     }
 
     private Customer getCustomerFromCSVLine(String[] values) {
-
+        String customerType =values[CustomerAttributesEnum.CUSTOMERTYPE.getIndex()];
         String id = values[CustomerAttributesEnum.CUSTOMERID.getIndex()];
         String username = values[CustomerAttributesEnum.USERNAME.getIndex()];
         String password = values[CustomerAttributesEnum.PASSWORD.getIndex()];
@@ -61,23 +58,41 @@ public class FileService implements Serializable{
         String lastName = values[CustomerAttributesEnum.CUSTOMERLASTNAME.getIndex()];
         int age = Integer.parseInt(values[CustomerAttributesEnum.CUSTOMERAGE.getIndex()]);
         String artistFollowedIds = values[CustomerAttributesEnum.FOLLOWEDARTISTS.getIndex()];
+        if (customerType.equalsIgnoreCase("premium")){
+            Customer customer = new PremiumCustomer(customerType,UUID.fromString(id), username, password, name, lastName, age);
+            String artistIdsFollowed =
+                    extractElementsBetweenCurlyBraces(artistFollowedIds);
 
-        Customer customer = new Customer(UUID.fromString(id), username, password, name, lastName, age);
+            String[] artistIdsFollowedArray = splitAndDeleteSpaces(artistIdsFollowed, COMMA_DELIMITER);
 
-        String artistIdsFollowed =
-                extractElementsBetweenCurlyBraces(artistFollowedIds);
+            for(String artistIds : artistIdsFollowedArray){
+                customer.addFollowedArtist(UUID.fromString(artistIds));
+            }
+            Set<UUID> artistIdsFollowedSet = Stream.of(artistIdsFollowedArray)
+                    .map(UUID::fromString)
+                    .collect(Collectors.toSet());
 
-        String[] artistIdsFollowedArray = splitAndDeleteSpaces(artistIdsFollowed, COMMA_DELIMITER);
-
-        for(String artistIds : artistIdsFollowedArray){
-            customer.addFollowedArtist(UUID.fromString(artistIds));
+            Customer alternativeCustomer = new PremiumCustomer(customerType,UUID.fromString(id), username, password, name, lastName, age, artistIdsFollowedSet);
+            return customer;
         }
-        Set<UUID> artistIdsFollowedSet = Stream.of(artistIdsFollowedArray)
-                .map(UUID::fromString)
-                .collect(Collectors.toSet());
+        else {
+            Customer customer = new RegularCustomer(customerType,UUID.fromString(id), username, password, name, lastName, age);
+            String artistIdsFollowed =
+                    extractElementsBetweenCurlyBraces(artistFollowedIds);
 
-        Customer alternativeCustomer = new Customer(UUID.fromString(id), username, password, name, lastName, age, artistIdsFollowedSet);
-        return customer;
+            String[] artistIdsFollowedArray = splitAndDeleteSpaces(artistIdsFollowed, COMMA_DELIMITER);
+
+            for(String artistIds : artistIdsFollowedArray){
+                customer.addFollowedArtist(UUID.fromString(artistIds));
+            }
+            Set<UUID> artistIdsFollowedSet = Stream.of(artistIdsFollowedArray)
+                    .map(UUID::fromString)
+                    .collect(Collectors.toSet());
+
+            Customer alternativeCustomer = new RegularCustomer(customerType,UUID.fromString(id), username, password, name, lastName, age, artistIdsFollowedSet);
+            return customer;
+        }
+
     }
 
     public List<Song> loadSongFromCSVFile(String path, String delimiter) throws IOException {

@@ -1,13 +1,14 @@
 package com.spotify.services.enums;
 
 public enum CustomerAttributesEnum {
-    CUSTOMERID(0, "userID"),
-    USERNAME (1, "userName"),
-    PASSWORD (2, "customerPassword"),
-    CUSTOMERNAME (3, "customerName"),
-    CUSTOMERLASTNAME (4, "customerLastName"),
-    CUSTOMERAGE(5, "customerAge"),
-    FOLLOWEDARTISTS(6, "followedArtists");
+    CUSTOMERTYPE (0,"customerType"),
+    CUSTOMERID(1, "userID"),
+    USERNAME (2, "userName"),
+    PASSWORD (3, "customerPassword"),
+    CUSTOMERNAME (4, "customerName"),
+    CUSTOMERLASTNAME (5, "customerLastName"),
+    CUSTOMERAGE(6, "customerAge"),
+    FOLLOWEDARTISTS(7, "followedArtists");
     private int index;
     private String headerName;
 

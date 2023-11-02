@@ -5,6 +5,7 @@ import com.spotify.exceptions.UserNameAlreadyTakenException;
 import com.spotify.models.Customer;
 import com.spotify.models.PlayList;
 import com.spotify.models.PremiumCustomer;
+import com.spotify.models.RegularCustomer;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -37,9 +38,19 @@ public class CustomerService implements Serializable {
         if (!ageOver18(clientAge)){
             throw new IllegalArgumentException(String.format("Client is not an adult"));
         }
-        Customer customer=new Customer(username,userPassword,clientName,clientLastname,clientAge);
-        customers.add(customer);
-        return addCustomerToDatabase(customer);
+        if (customerType.equalsIgnoreCase("premium")){
+            Customer customer=new PremiumCustomer(customerType,username,userPassword,clientName,clientLastname,clientAge);
+            customers.add(customer);
+            return addCustomerToDatabase(customer);
+        }
+        else if (customerType.equalsIgnoreCase("regular")) {
+            Customer customer=new RegularCustomer(customerType,username,userPassword,clientName,clientLastname,clientAge);
+            customers.add(customer);
+            return addCustomerToDatabase(customer);
+        }
+        else{
+            return false;
+        }
     }
 
 

@@ -63,6 +63,8 @@ public class Main {
     }
 
         private static void createNewUser() {
+            System.out.println("Enter customer type: ");
+            String customerType = input.nextLine();
             System.out.println("Enter user: ");
             String userName = input.nextLine();
             System.out.println("Enter password: ");
@@ -74,7 +76,7 @@ public class Main {
             System.out.println("Enter client age: ");
             int clientAge = parseInt(input.nextLine());
             try {
-                customerServiceCall.addCustomerToDatabase(userName, userPassword, clientName, clientLastname, clientAge);
+                customerServiceCall.addCustomerToDatabase(customerType,userName, userPassword, clientName, clientLastname, clientAge);
                 System.out.println("Customer created successfully");
             } catch (UserNameAlreadyTakenException | IllegalArgumentException e) {
                 System.out.println(e.getMessage());
