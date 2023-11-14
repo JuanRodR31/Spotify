@@ -73,21 +73,23 @@ public class PremiumCustomer extends Customer{
     public void removeSongFromPlaylist(UUID playlistId, UUID songId) throws NotFoundException{
         boolean playlistExists =false;
         boolean songExists =false;
+        boolean deleteSuccessfully=false;
         for (PlayList playlistToSearch: playlists){
             if (playlistToSearch.getPlaylistID().equals(playlistId)){
                 playlistExists=true;
                 for (UUID songIdToSearch : playlistToSearch.getSongIDs()){
-                    if  (songIdToSearch.equals(songId)){
+                    if  (songIdToSearch.equals(songId) && !deleteSuccessfully){
                         playlistToSearch.getSongIDs().remove(songId);
                         songExists=true;
+                        deleteSuccessfully=true;
                     }
                 }
-                if (songExists==false){
+                if (!songExists){
                     throw new NotFoundException("song not found");
                 }
             }
         }
-        if (playlistExists=false) {
+        if (!playlistExists) {
             throw new NotFoundException("playlist not found");
         }
     }
@@ -106,5 +108,21 @@ public class PremiumCustomer extends Customer{
             throw new NotFoundException("Playlist not found");
         }
         return songsList;
+    }
+
+    @Override
+    public String toString() {
+        return "PremiumCustomer{" +
+
+                ", customerType='" + customerType + '\'' +
+                ", customerIdentifier=" + customerIdentifier +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                ", clientName='" + clientName + '\'' +
+                ", clientLastname='" + clientLastname + '\'' +
+                ", clientAge=" + clientAge +
+                ", followedArtist=" + followedArtist +
+                "playlists=" + playlists +
+                '}';
     }
 }

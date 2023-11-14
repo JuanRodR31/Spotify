@@ -1,5 +1,6 @@
 package com.spotify;
 
+import com.spotify.exceptions.MaxSongsInPlayList;
 import com.spotify.exceptions.NotFoundException;
 import com.spotify.exceptions.UserNameAlreadyTakenException;
 import com.spotify.services.ArtistService;
@@ -56,6 +57,9 @@ public class Main {
                 case "19" -> showReports();
                 case "20" ->loadArtistFromCSVFile();
                 case "21" -> artistServiceCall.printArtistList();
+                case "22" -> removeSongFromPlayList();
+                case "23" -> showSongsOfAPlaylist();
+                case "24" -> playSongs();
                 case "0" -> System.out.println("Bye!");
                 default -> System.out.println("Unexpected value: " + option);
             }
@@ -133,15 +137,15 @@ public class Main {
         }
         public static Map<String, Long> artistFollowersReport (ArtistService artistService,
                 CustomerService customerService){
-            List<UUID> idsSeguidores = customerService.obtainIDsOfAllFollowedArtists();
-            Map<String, Long> cantidadDeSeguidoresParaCadaArtista = new HashMap<>();
+            List<UUID> followersIds = customerService.obtainIDsOfAllFollowedArtists();
+            Map<String, Long> followerQuantityPerArtist = new HashMap<>();
 
-            for (UUID idSeguidor : idsSeguidores) {
-                String nombreArtista = getArtistByID(idSeguidor, artistService);
-                cantidadDeSeguidoresParaCadaArtista.put(nombreArtista, cantidadDeSeguidoresParaCadaArtista.getOrDefault(nombreArtista, 0L) + 1);
+            for (UUID followerID : followersIds) {
+                String artistName = getArtistByID(followerID, artistService);
+                followerQuantityPerArtist.put(artistName, followerQuantityPerArtist.getOrDefault(artistName, 0L) + 1);
             }
 
-            return cantidadDeSeguidoresParaCadaArtista;
+            return followerQuantityPerArtist;
         }
         public static String getArtistByID (UUID followerID, ArtistService artistService){
             return artistService.getArtistNameUsingID(followerID);
@@ -203,10 +207,17 @@ public class Main {
         }
         private static void createNewPlayList (){
             System.out.println("Enter user: ");
+            String playlistName="null";
             String customerUserName = input.nextLine();
-            System.out.println("Enter playlist name: ");
-            String playListName = input.nextLine();
-            customerServiceCall.createNewPlayList(customerUserName, playListName);
+            if (customerServiceCall.customerIsPremium(customerUserName)){
+                System.out.println("Enter playlist name: ");
+                playlistName = input.nextLine();
+            }
+            try {
+                customerServiceCall.createNewPlayList(customerUserName,playlistName);
+            }catch (UnsupportedOperationException e){
+                System.out.println(e.getMessage());
+            }
         }
         private static void addSongsToPlayList (){
             System.out.println("Enter user: ");
@@ -217,22 +228,45 @@ public class Main {
             UUID songID = UUID.fromString(input.nextLine());
             boolean songExists = songServiceCall.verifyIfSongExists(songID);
             if (songExists) {
-                customerServiceCall.addSongsToCustomerPlayList(customerUserName, playlistID, songID);
+
+                try {
+                    customerServiceCall.addSongsToCustomerPlayList(customerUserName, playlistID, songID);
+                } catch (MaxSongsInPlayList | NotFoundException e) {
+                    System.out.println(e.getMessage());
+                }
             } else {
                 System.out.println("Song does not exist");
             }
         }
         private static void showReports (){
-            System.out.println("1. Show artist Followers\n2. Show artist popularity");
+            System.out.println("1. Show artist Followers\n" +
+                    "2. Show artist popularity\n" +
+                    "3. Show unique Songs");
             String reportOption = input.nextLine();
             switch (reportOption) {
                 case "1"-> printArtistFollowersReport(artistServiceCall, customerServiceCall);
-                case "2"-> printArtistPopularityReport (artistServiceCall,customerServiceCall,songServiceCall);
+                case "2"-> printArtistPopularityReport ();
+                case "3"-> printUniqueSongs ();
             }
         }
 
-    private static void printArtistPopularityReport(ArtistService artistServiceCall, CustomerService customerServiceCall, SongService songServiceCall) {
+    private static void printUniqueSongs() {
+        List <UUID> allSongs=customerServiceCall.getAllSongsUUIDsFromPlayList();
+        List <UUID> uniqueSongs= customerServiceCall.uniqueUUIDs(allSongs);
+        List <String> uniqueSongsByName =songServiceCall.songIdsToSongNames(uniqueSongs);
+        uniqueSongsByName.forEach(System.out::println);
+    }
 
+    private static void printArtistPopularityReport() {
+        List <UUID> allSongs= customerServiceCall.getAllSongsUUIDsFromPlayList();
+        List <String> songsToArtist= songServiceCall.transformSongIDsToArtistList(allSongs);
+        List <String> uniqueArtists = songServiceCall.listUniqueArtists(songsToArtist);
+        List <Integer> artistPopularityInUnits= songServiceCall.artistPopularityInUnits(uniqueArtists,songsToArtist);
+        Integer maxPopularity= songServiceCall.getMaxPopularity(artistPopularityInUnits);
+        List <Double> percentageList = songServiceCall.getpercentageList(artistPopularityInUnits,maxPopularity);
+        for (int i = 0; i < uniqueArtists.size(); i++) {
+            System.out.println(uniqueArtists.get(i) + " - " + artistPopularityInUnits.get(i)+" - "+ percentageList.get(i)+"%");
+        }
     }
 
     private static void createDeleteOrModifyArtist () {
@@ -262,6 +296,49 @@ public class Main {
             String newArtistName = input.nextLine();
             artistServiceCall.modifyArtist(artistName, newArtistName);
         }
+        private static void removeSongFromPlayList(){
+            System.out.println("Enter user: ");
+            String customerUserName = input.nextLine();
+            System.out.println("Enter playlist ID: ");
+            UUID playlistID = UUID.fromString(input.nextLine());
+            System.out.println("Enter song ID: ");
+            UUID songID = UUID.fromString(input.nextLine());
+            try {
+                customerServiceCall.deleteSongFromAPlayList(customerUserName,playlistID,songID);
+            } catch (NotFoundException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+        private static void showSongsOfAPlaylist (){
+            System.out.println("Enter user: ");
+            String customerUserName = input.nextLine();
+            System.out.println("Enter playlist ID: ");
+            UUID playlistID = UUID.fromString(input.nextLine());
+            try {
+                List<UUID>finalList=customerServiceCall.getSongsFromAnUserPlaylist(customerUserName,playlistID);
+                List <String> finalListWithNames =songServiceCall.songIdsToSongNames(finalList);
+                finalListWithNames.forEach(System.out::println);
+            } catch (NotFoundException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+        private static void playSongs (){
+            System.out.println("Enter user: ");
+            String customerUserName = input.nextLine();
+            System.out.println("Enter playlist ID: ");
+            UUID playlistID = UUID.fromString(input.nextLine());
+            List<UUID>finalList= null;
+            try {
+                finalList = customerServiceCall.getSongsFromAnUserPlaylist(customerUserName,playlistID);
+                List <String> finalListWithNames =songServiceCall.songIdsToSongNames(finalList);
+                List <String> playlistToPlay = songServiceCall.play (finalListWithNames);
+                playlistToPlay.forEach(System.out::println);
+            } catch (NotFoundException e) {
+                System.out.println(e.getMessage());
+            }
+
+
+        }
         private static void printMenu(){
             System.out.println("Menu\n" +
                     "Option 1: add new user to user list\n" +
@@ -285,6 +362,9 @@ public class Main {
                     "Option 19: Show Report\n" +
                     "Option 20: import artists from csv file\n" +
                     "Option 21: Print artist List\n" +
+                    "Option 22: Remove song from a playlist\n" +
+                    "Option 23: Print songs from a playlist\n" +
+                    "Option 24: Play songs from a playlist\n" +
                     "Option 0: Exit\n" +
                     "Select your option: ");
         }

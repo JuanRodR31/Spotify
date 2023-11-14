@@ -1,5 +1,6 @@
 package com.spotify.services;
 
+import com.spotify.exceptions.MaxSongsInPlayList;
 import com.spotify.exceptions.NotFoundException;
 import com.spotify.exceptions.UserNameAlreadyTakenException;
 import com.spotify.models.Customer;
@@ -26,6 +27,9 @@ public class CustomerService implements Serializable {
         this.customerByUsername = new HashMap<>();
     }
 
+    public Map<UUID, Customer> getCustomerByID() {
+        return customerByID;
+    }
 
     public boolean addCustomerToDatabase(String customerType, String username,
                                          String userPassword,
@@ -171,14 +175,10 @@ public class CustomerService implements Serializable {
         }
     }*/
 
-    public void addSongsToCustomerPlayList(String costumerUsername, UUID playListID, UUID songID) {
+    public void addSongsToCustomerPlayList(String costumerUsername, UUID playListID, UUID songID) throws MaxSongsInPlayList, NotFoundException {
         for (Customer customer: customerByID.values()){
             if (customer.getUsername().equals(costumerUsername)){
-                for (PlayList playList : customer.getPlaylists()){
-                    if (playList.getPlaylistID().equals(playListID)){
-                        playList.addSong(songID);
-                    }
-                }
+                customer.addSongToPlaylist(playListID, songID);
             }
         }
     }
@@ -233,6 +233,10 @@ public class CustomerService implements Serializable {
     public void createNewPlayList(String customerUserName, String playListName) {
         for (Customer customer: customerByID.values()){
             if (customer.getUsername().equals(customerUserName)){
+                if (customer.getCustomerType().equalsIgnoreCase("premium")){
+                    System.out.println("Enter playlist name: ");
+
+                }
                 PlayList playList=new PlayList(playListName);
                 customer.addPlaylist(String.valueOf(playList));
             }
@@ -245,5 +249,40 @@ public class CustomerService implements Serializable {
                 .collect(Collectors.toList());
 
     }
-
+    public boolean customerIsPremium (String customerUsername){
+        for (Customer customer: customerByID.values()){
+            if (customer.getUsername().equals(customerUsername) && customer.getCustomerType().equalsIgnoreCase("premium")){
+                return true;
+            }
+        }
+        return false;
+    }
+    public void deleteSongFromAPlayList (String customerUsername, UUID playlistId,UUID songId) throws NotFoundException {
+        for (Customer customer: customerByID.values()){
+            if (customer.getUsername().equals(customerUsername)){
+                customer.removeSongFromPlaylist(playlistId,songId);
+            }
+        }
+    }
+    public List<UUID> getSongsFromAnUserPlaylist (String customerUsername, UUID playListID) throws NotFoundException {
+        for (Customer customer: customerByID.values()){
+            if (customer.getUsername().equals(customerUsername)){
+                return customer.getSongsFromPlaylist(playListID);
+            }
+        }
+        return null;
+    }
+    public List <UUID> getAllSongsUUIDsFromPlayList(){
+        List <UUID>allSongs =new ArrayList<>();
+        for (Customer customer :customerByID.values()){
+            for (PlayList playList : customer.getPlaylists()){
+                allSongs.addAll(playList.getSongIDs());
+            }
+        }
+        return allSongs;
+    }
+    public static List<UUID> uniqueUUIDs(List<UUID> uuidList) {
+        HashSet<UUID> uniqueUUIDs = new HashSet<>(uuidList);
+        return new ArrayList<>(uniqueUUIDs);
+    }
 }

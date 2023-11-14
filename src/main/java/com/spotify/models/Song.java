@@ -1,7 +1,10 @@
 
 package com.spotify.models;
 
+import com.spotify.Playable;
+
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 public class Song implements Serializable {
@@ -91,4 +94,5 @@ public class Song implements Serializable {
                 ", Album='" + Album + '\'' +
                 '}';
     }
+
 }

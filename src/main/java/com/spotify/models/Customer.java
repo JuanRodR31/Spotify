@@ -26,7 +26,11 @@ public abstract class Customer implements Serializable {
         this.followedArtist = followedArtist;
     }
 
-    public Customer(String customerType,String user, String password, String clientName, String clientLastname, int clientAge) {
+    public String getCustomerType() {
+        return customerType;
+    }
+
+    public Customer(String customerType, String user, String password, String clientName, String clientLastname, int clientAge) {
         this.customerType =customerType;
         this.customerIdentifier = UUID.randomUUID();
         this.username = user;
@@ -107,20 +111,6 @@ public abstract class Customer implements Serializable {
 
     public void setCustomerIdentifier(UUID customerIdentifier) {
         this.customerIdentifier = customerIdentifier;
-    }
-
-    @Override
-    public String toString() {
-        return "Customer{" +
-                "customerType='" + customerType + '\'' +
-                ", customerIdentifier=" + customerIdentifier +
-                ", username='" + username + '\'' +
-                ", password='" + password + '\'' +
-                ", clientName='" + clientName + '\'' +
-                ", clientLastname='" + clientLastname + '\'' +
-                ", clientAge=" + clientAge +
-                ", followedArtist=" + followedArtist +
-                '}';
     }
 
     public void addFollowedArtist(UUID artistID) {

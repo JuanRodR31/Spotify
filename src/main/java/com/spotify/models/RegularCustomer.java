@@ -31,7 +31,7 @@ public class RegularCustomer extends Customer {
 
     @Override
     public void addPlaylist(String name) throws UnsupportedOperationException{
-        throw new UnsupportedOperationException("Playlist"+ name + " cannot be added because you are a regular user");
+        throw new UnsupportedOperationException("Playlist cannot be added because you are a regular user");
     }
 
     @Override
@@ -93,5 +93,19 @@ public class RegularCustomer extends Customer {
             throw new NotFoundException("Playlist not found");
         }
         return songsList;
+    }
+
+    @Override
+    public String toString() {
+        return "RegularCustomer{" +
+                ", customerType='" + customerType + '\'' +
+                ", customerIdentifier=" + customerIdentifier +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                ", clientName='" + clientName + '\'' +
+                ", clientLastname='" + clientLastname + '\'' +
+                ", clientAge=" + clientAge +
+                ", followedArtist=" + followedArtist +"uniquePlaylist=" + uniquePlaylist +
+                '}';
     }
 }

@@ -1,5 +1,6 @@
 package com.spotify.services;
 
+import com.spotify.Playable;
 import com.spotify.exceptions.NotFoundException;
 import com.spotify.models.Song;
 
@@ -13,7 +14,7 @@ import java.util.stream.Collectors;
 
 import static java.lang.Integer.parseInt;
 
-public class SongService implements Serializable {
+public class SongService implements Serializable, Playable {
     private  List<Song> songList=new ArrayList<>();
     Map<UUID,Song >songByID;
     public SongService (){
@@ -182,4 +183,68 @@ public class SongService implements Serializable {
         return allIDs;
     }
 
+    public List <String> transformSongIDsToArtistList (List <UUID> songIDs){
+        List <String> artistNames= new ArrayList<>();
+        for (UUID songId : songIDs){
+            for (Song  songData: songByID.values()){
+                if (songId.equals(songData.getSongIdentifier())){
+                    artistNames.add(songData.getArtistName());
+                }
+            }
+        }
+        return artistNames;
+    }
+    public List<String> listUniqueArtists(List<String> artistList) {
+        HashSet<String> uniqueArtists = new HashSet<>(artistList);
+        return new ArrayList<>(uniqueArtists);
+    }
+    public List <Integer> artistPopularityInUnits (List<String> uniqueArtist,
+                                                           List <String> allArtist ){
+        List <Integer> artistPopularity= new ArrayList<>();
+        for (String eachArtist : uniqueArtist){
+            Integer counter=0;
+            for (String countArtist : allArtist){
+                if (eachArtist.equals(countArtist)){
+                    counter++;
+                }
+            }
+            artistPopularity.add(counter);
+        }
+        return  artistPopularity;
+    }
+    public Integer getMaxPopularity (List<Integer> artistPopularityList){
+        int max=0;
+        for (int count :artistPopularityList ){
+            if (count>max){
+                max=count;
+            }
+        }
+        return max;
+    }
+    public List<Double> getpercentageList (List<Integer> allArtistPopularity, Integer max){
+        List<Double> allPercentages= new ArrayList<>();
+        for (Integer popularityInUnits : allArtistPopularity){
+            Double percentage = popularityInUnits* 100.0 / max ;
+            allPercentages.add(percentage);
+        }
+        return allPercentages;
+    }
+    public List <String> songIdsToSongNames (List<UUID> uniqueSongs){
+        List<String> songNames =new ArrayList<>();
+        for (UUID songId: uniqueSongs){
+            for (Song song :songByID.values()){
+                if (song.getSongIdentifier().equals(songId)){
+                    songNames.add(song.getSongName());
+                }
+            }
+        }
+        return songNames;
+    }
+    public List<String> play(List<String> songNames) {
+        List<String> results = new ArrayList<>();
+        for (String songName : songNames) {
+            results.add("playing " + songName);
+        }
+        return results;
+    }
 }
